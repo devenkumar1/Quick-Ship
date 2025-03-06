@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id      String    @id @default(cuid())
+  email   String    @unique
+  password String?
+  name    String
+  role    Role      @default(USER)
+  provider String?
+  providerId String?   
+  orders  Order[]
+  reviews Review[]
+  seller  Seller? 
+}
+
+enum Role {
+  USER
+  ADMIN
+  SELLER
+}
+
+model Seller {
+  id       Int    @id @default(autoincrement())
+  userId   String   @unique
+  user     User   @relation(fields: [userId], references: [id])
+  shop     Shop?
+}
+
+model Shop {
+  id         Int       @id @default(autoincrement())
+  name       String
+  sellerId   Int       @unique
+  seller     Seller    @relation(fields: [sellerId], references: [id])
+  products   Product[]
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String
+  price       Decimal
+  shopId      Int
+  shop        Shop      @relation(fields: [shopId], references: [id])
+  orders      Order[]
+  reviews     Review[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Order {
+  id          Int       @id @default(autoincrement())
+  quantity    Int
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  productId   Int
+  product     Product   @relation(fields: [productId], references: [id])
+  payment     Payment?
+  reviews     Review[]
+  createdAt   DateTime  @default(now())
+  status      OrderStatus @default(PENDING)
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Payment {
+  id        Int       @id @default(autoincrement())
+  orderId   Int       @unique
+  order     Order     @relation(fields: [orderId], references: [id])
+  amount    Decimal
+  status    PaymentStatus @default(PENDING)
+  createdAt DateTime  @default(now())
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model Review {
+  id          Int       @id @default(autoincrement())
+  text        String
+  rating      Int
+  productId   Int
+  product     Product   @relation(fields: [productId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  orderId     Int
+  order       Order     @relation(fields: [orderId], references: [id])
+  createdAt   DateTime  @default(now())
+}
