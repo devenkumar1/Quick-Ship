@@ -17,6 +17,7 @@ model User {
   orders  Order[]
   reviews Review[]
   seller  Seller? 
+  phoneNumber Int?
 }
 
 enum Role {
