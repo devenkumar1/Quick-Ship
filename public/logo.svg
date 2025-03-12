@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Box base -->
+  <path d="M8 12L20 6L32 12L20 18L8 12Z" fill="#2563EB" />
+  <!-- Box front -->
+  <path d="M8 12V28L20 34V18L8 12Z" fill="#1D4ED8" />
+  <!-- Box right side -->
+  <path d="M20 18V34L32 28V12L20 18Z" fill="#3B82F6" />
+  <!-- Speed lines -->
+  <path d="M34 16L36 15M34 20L37 19M34 24L36 23" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" />
+</svg> 

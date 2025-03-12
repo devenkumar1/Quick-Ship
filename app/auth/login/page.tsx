@@ -52,7 +52,7 @@ export default function Login() {
             </svg>
             <input
               type="email"
-              className="grow"
+              className="grow bg-gray-500 text-white"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.currentTarget.value)}
@@ -65,7 +65,7 @@ export default function Login() {
             </svg>
             <input
               type="password"
-              className="grow"
+              className="grow bg-gray-500 text-white"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.currentTarget.value)}
@@ -81,16 +81,11 @@ export default function Login() {
         <span>Don't have an account?
           <Link href="/auth/signup"> Signup</Link>
         </span>
-        <p className="w-full text-gray-500 text-center">or</p>
+        <p className="w-full text-gray-500 text-center ">or</p>
 
         <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="bg-[#4285F4] text-white px-4 py-2 m-2 w-full rounded-md mt-2 flex justify-center items-center gap-2 hover:scale-110 transition-all ease-out">
           <Image src="https://cdn-icons-png.flaticon.com/512/2702/2702602.png" alt="Google Logo" width={20} height={20} className="mr-2" />
           Login with Google
-        </button>
-
-        <button onClick={() => signIn("github", { prompt: "login", callbackUrl: "/home" })} className="bg-[#333] text-white px-4 py-2 rounded-md flex justify-center items-center gap-2 w-full hover:scale-110 transition-all ease-out">
-          <Image src="https://cdn-icons-png.flaticon.com/512/2111/2111425.png" alt="GitHub Logo" width={20} height={20} className="mr-2" />
-          Login with GitHub
         </button>
       </div>
     </div>
