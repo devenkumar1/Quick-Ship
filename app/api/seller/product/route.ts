@@ -4,6 +4,7 @@ const client = new PrismaClient;
 export async function POST(req:NextRequest) {
     const reqBody=await req.json();
     const {name, price,shopId}=reqBody ;
+    console.log(reqBody);
     if(!name ||!price ||!shopId){
         return NextResponse.json({message:"all fileds are mandatory"},{status:400});
     }
@@ -16,7 +17,7 @@ export async function POST(req:NextRequest) {
          }
     })
     
-    return NextResponse.json({message:"new product added "},{status:200});
+    return NextResponse.json({message:"new product added ",product:newProduct},{status:200});
     
 } catch (error) {
  console.log("Error occured in adding a product",error);
