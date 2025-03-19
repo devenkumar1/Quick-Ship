@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Burger bottom bun -->
+  <path d="M10 40 Q32 50 54 40 L54 48 Q32 58 10 48 Z" fill="#e9a268"/>
+  <!-- Burger patty -->
+  <path d="M8 32 Q32 42 56 32 L56 40 Q32 50 8 40 Z" fill="#6b4e3b"/>
+  <!-- Cheese -->
+  <path d="M8 26 Q32 36 56 26 L56 34 Q32 44 8 34 Z" fill="#ffc857"/>
+  <!-- Lettuce -->
+  <path d="M10 22 Q18 27 24 24 T40 26 T54 22 L54 28 Q32 38 10 28 Z" fill="#72b01d"/>
+  <!-- Tomato -->
+  <path d="M10 18 Q32 28 54 18 L54 24 Q32 34 10 24 Z" fill="#e94f37"/>
+  <!-- Burger top bun -->
+  <path d="M12 10 Q32 5 52 10 Q56 12 56 18 Q32 28 8 18 Q8 12 12 10 Z" fill="#e9a268"/>
+</svg> 
