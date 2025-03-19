@@ -1,54 +1,55 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import ProductCard from '@/components/ProductCard';
-import { FaFilter, FaSort, FaSearch } from 'react-icons/fa';
+import Image from 'next/image';
+import Link from 'next/link';
+import { FaStar, FaSearch, FaFilter, FaSortAmountDown } from 'react-icons/fa';
+import axios from 'axios';
 
-// Define Product type
+// Product type based on Prisma schema
 type Product = {
   id: number;
   name: string;
   price: number;
+  shopId: number;
+  images: string[];
   shop: {
     name: string;
   };
-  reviews: Array<{
+  reviews?: Array<{
     rating: number;
   }>;
-  image?: string;
+  category?: string;
+  createdAt: string;
 };
 
-export default function ProductsPage() {
+type SortOption = 'price-asc' | 'price-desc' | 'rating' | 'newest';
+
+export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortOption, setSortOption] = useState('default');
-  const [showFilters, setShowFilters] = useState(false);
   
-  // Fetch products from the API
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [priceRange, setPriceRange] = useState<{ min: number; max: number | null }>({ min: 0, max: null });
+  const [minRating, setMinRating] = useState<number>(0);
+  const [showFilters, setShowFilters] = useState(false);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/products');
+        const response = await axios.get<{ products: Product[] }>('/api/products');
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch products');
-        }
-        
-        const data = await response.json();
-        
-        if (data && data.products) {
-          // Add some sample images since there's no image field in the schema
-          const productsWithImages = data.products.map((product: Product, index: number) => ({
-            ...product,
-            image: `https://picsum.photos/seed/${product.id}/300/200`
-          }));
-          
-          setProducts(productsWithImages);
+        if (response.data && response.data.products) {
+          setProducts(response.data.products);
+          setFilteredProducts(response.data.products);
         } else {
-          setProducts([]);
+          setError('No products found');
         }
       } catch (err) {
         console.error('Error fetching products:', err);
@@ -60,58 +61,83 @@ export default function ProductsPage() {
     
     fetchProducts();
   }, []);
-  
-  // Filter products based on search query
-  const filteredProducts = products.filter(product => 
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.shop.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
-  // Sort products based on selected option
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    switch (sortOption) {
-      case 'price-low':
-        return a.price - b.price;
-      case 'price-high':
-        return b.price - a.price;
-      case 'rating':
-        const aRating = a.reviews.length > 0 
-          ? a.reviews.reduce((sum, review) => sum + review.rating, 0) / a.reviews.length
-          : 0;
-        const bRating = b.reviews.length > 0 
-          ? b.reviews.reduce((sum, review) => sum + review.rating, 0) / b.reviews.length
-          : 0;
-        return bRating - aRating;
-      default:
-        return 0;
-    }
-  });
 
-  // Handle scenarios: loading, error, no products
+  // Apply filters and sorting
+  useEffect(() => {
+    let result = [...products];
+
+    // Apply search filter
+    if (searchQuery) {
+      result = result.filter(product =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.shop.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Apply category filter
+    if (selectedCategory !== 'all') {
+      result = result.filter(product => product.category === selectedCategory);
+    }
+
+    // Apply price range filter
+    result = result.filter(product => 
+      product.price >= priceRange.min && 
+      (!priceRange.max || product.price <= priceRange.max)
+    );
+
+    // Apply rating filter
+    if (minRating > 0) {
+      result = result.filter(product => getAverageRating(product) >= minRating);
+    }
+
+    // Apply sorting
+    switch (sortBy) {
+      case 'price-asc':
+        result.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-desc':
+        result.sort((a, b) => b.price - a.price);
+        break;
+      case 'rating':
+        result.sort((a, b) => getAverageRating(b) - getAverageRating(a));
+        break;
+      case 'newest':
+        result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        break;
+    }
+
+    setFilteredProducts(result);
+  }, [products, searchQuery, selectedCategory, sortBy, priceRange, minRating]);
+
+  // Calculate average rating for a product
+  const getAverageRating = (product: Product) => {
+    if (!product.reviews || product.reviews.length === 0) return 0;
+    const sum = product.reviews.reduce((acc, review) => acc + review.rating, 0);
+    return sum / product.reviews.length;
+  };
+
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-          <p className="mt-4 text-lg text-gray-600">Loading products...</p>
+      <div className="container mx-auto px-4 py-12">
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+            <p className="mt-4 text-lg text-gray-600">Loading products...</p>
+          </div>
         </div>
       </div>
     );
   }
-  
+
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-4">
-            <p>{error}</p>
+      <div className="container mx-auto px-4 py-12">
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-4">
+              <p>{error}</p>
+            </div>
           </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            Try Again
-          </button>
         </div>
       </div>
     );
@@ -119,84 +145,177 @@ export default function ProductsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">All Products</h1>
+      <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">All Products</h1>
         
-        {/* Search and filters row */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          {/* Search bar */}
-          <div className="relative flex-1">
+        {/* Search and Sort Controls */}
+        <div className="w-full md:w-auto flex flex-col md:flex-row gap-4">
+          <div className="relative flex-grow">
             <input
               type="text"
-              placeholder="Search products or shops..."
+              placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <FaSearch className="absolute right-3 top-3 text-gray-400" />
           </div>
           
-          {/* Sort dropdown */}
-          <div className="md:w-64">
-            <div className="relative">
-              <select
-                value={sortOption}
-                onChange={(e) => setSortOption(e.target.value)}
-                className="w-full appearance-none px-4 py-3 pr-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="default">Sort By: Featured</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="rating">Top Rated</option>
-              </select>
-              <FaSort className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-          
-          {/* Filter button (mobile) */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="md:hidden flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+            className="px-4 py-2 bg-gray-100 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition-colors"
+            aria-label="Toggle filters panel"
+            title="Toggle filters"
           >
-            <FaFilter />
-            Filters
+            <FaFilter /> Filters
           </button>
+          
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            aria-label="Sort products"
+            title="Sort products"
+          >
+            <option value="newest">Newest First</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="rating">Highest Rated</option>
+          </select>
         </div>
-        
-        {/* Mobile filters - can be expanded */}
-        {showFilters && (
-          <div className="md:hidden bg-white p-4 rounded-lg shadow-md mb-4">
-            <h3 className="font-semibold mb-2">Price Range</h3>
-            {/* Add your filter controls here */}
-            <div className="flex justify-end mt-4">
-              <button 
-                onClick={() => setShowFilters(false)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-              >
-                Apply Filters
-              </button>
-            </div>
-          </div>
-        )}
       </div>
       
-      {/* Product grid */}
-      {sortedProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {sortedProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="bg-gray-100 p-6 rounded-lg text-center">
-            <h3 className="text-xl font-semibold text-gray-700">No products found</h3>
-            <p className="text-gray-500 mt-2">
-              Try adjusting your search or filter criteria
-            </p>
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Category Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category
+              </label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                aria-label="Filter by category"
+                title="Filter by category"
+              >
+                <option value="all">All Categories</option>
+                <option value="electronics">Electronics</option>
+                <option value="clothing">Clothing</option>
+                <option value="books">Books</option>
+                <option value="home">Home & Living</option>
+              </select>
+            </div>
+            
+            {/* Price Range Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Price Range
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={priceRange.min}
+                  onChange={(e) => setPriceRange({ ...priceRange, min: Number(e.target.value) })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <span>-</span>
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={priceRange.max || ''}
+                  onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value ? Number(e.target.value) : null })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            
+            {/* Rating Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Minimum Rating
+              </label>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <button
+                    key={rating}
+                    onClick={() => setMinRating(rating === minRating ? 0 : rating)}
+                    className={`p-2 rounded-lg ${
+                      rating <= minRating ? 'bg-yellow-400 text-white' : 'bg-gray-100'
+                    }`}
+                    aria-label={`Set minimum rating to ${rating} stars`}
+                    title={`Set minimum rating to ${rating} stars`}
+                  >
+                    <FaStar />
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
+        </div>
+      )}
+      
+      {/* Products Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {filteredProducts.map((product) => (
+          <Link 
+            href={`/Products/${product.id}`} 
+            key={product.id}
+            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+          >
+            <div className="relative h-48">
+              <Image
+                src={product.images[0] || '/placeholder-product.jpg'}
+                alt={product.name}
+                fill
+                priority
+                className="object-cover"
+              />
+            </div>
+            
+            <div className="p-4">
+              <h2 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
+                {product.name}
+              </h2>
+              
+              <div className="flex items-center mb-2">
+                <div className="flex items-center mr-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <FaStar
+                      key={star}
+                      className={`${
+                        star <= getAverageRating(product)
+                          ? 'text-yellow-400'
+                          : 'text-gray-300'
+                      } w-4 h-4`}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-gray-600">
+                  ({product.reviews?.length || 0})
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-lg font-bold text-blue-600">
+                  ₹{typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
+                </span>
+                <span className="text-sm text-gray-600">{product.shop.name}</span>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+      
+      {/* No Results Message */}
+      {filteredProducts.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-600 text-lg">No products found matching your criteria.</p>
         </div>
       )}
     </div>
   );
-}
+} 

@@ -16,8 +16,7 @@ type ProductProps = {
     reviews: Array<{
       rating: number;
     }>;
-    // Add optional image field since it's not in schema but we might want to use it
-    image?: string;
+    images: string[];
   }
 }
 
@@ -27,8 +26,10 @@ const ProductCard = ({ product }: ProductProps) => {
     ? (product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length).toFixed(1)
     : "0.0";
 
-  // Use a default image if none provided
-  const productImage = product.image || "https://images.pexels.com/photos/1020370/pexels-photo-1020370.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2";
+  // Get the first image from the array or use a default image
+  const productImage = product.images && product.images.length > 0
+    ? product.images[0]
+    : "https://images.pexels.com/photos/1020370/pexels-photo-1020370.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2";
 
   return (
     <div className="min-w-[280px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-4 flex flex-col gap-3">

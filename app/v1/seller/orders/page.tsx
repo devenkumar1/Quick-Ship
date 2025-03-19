@@ -1,28 +1,40 @@
+'use client'
 import { useState, useEffect } from 'react';
 import { FaCheck, FaTruck, FaSpinner, FaRupeeSign } from 'react-icons/fa';
 import axios from 'axios';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
+import { formatCurrency } from '@/utils/format';
+
+interface Product {
+  name: string;
+  quantity: number;
+  price: number;
+}
 
 interface Order {
   id: string;
   customerName: string;
   customerEmail: string;
-  productName: string;
-  quantity: number;
-  amount: number;
+  products: Product[];
+  totalAmount: number;
   status: string;
   paymentStatus: string;
   createdAt: string;
+}
+
+interface DashboardStats {
+  stats: {
+    totalRevenue: number;
+    totalOrders: number;
+    totalProducts: number;
+  };
 }
 
 export default function SellerOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [stats, setStats] = useState({
-    totalRevenue: 0,
-    pendingPayments: 0
-  });
+  const [stats, setStats] = useState<DashboardStats | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -37,10 +49,7 @@ export default function SellerOrders() {
       ]);
       
       setOrders(ordersRes.data.orders);
-      setStats({
-        totalRevenue: statsRes.data.revenue,
-        pendingPayments: statsRes.data.pendingPayments
-      });
+      setStats(statsRes.data);
     } catch (err) {
       setError('Failed to fetch orders');
       console.error('Error fetching orders:', err);
@@ -100,7 +109,7 @@ export default function SellerOrders() {
             <FaRupeeSign className="text-green-500 text-3xl mr-4" />
             <div>
               <p className="text-gray-500">Total Revenue</p>
-              <p className="text-2xl font-bold">₹{stats.totalRevenue.toLocaleString()}</p>
+              <p className="text-2xl font-bold">{stats ? formatCurrency(stats.stats.totalRevenue) : '₹0.00'}</p>
             </div>
           </div>
         </div>
@@ -109,8 +118,8 @@ export default function SellerOrders() {
           <div className="flex items-center">
             <FaRupeeSign className="text-yellow-500 text-3xl mr-4" />
             <div>
-              <p className="text-gray-500">Pending Payments</p>
-              <p className="text-2xl font-bold">₹{stats.pendingPayments.toLocaleString()}</p>
+              <p className="text-gray-500">Total Orders</p>
+              <p className="text-2xl font-bold">{stats ? stats.stats.totalOrders : 0}</p>
             </div>
           </div>
         </div>
@@ -123,91 +132,94 @@ export default function SellerOrders() {
       )}
 
       {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Order Details
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {orders.map((order) => (
-                <tr key={order.id}>
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="font-medium">{order.productName}</p>
-                      <p className="text-sm text-gray-500">Quantity: {order.quantity}</p>
-                      <p className="text-sm text-gray-500">{formatDate(order.createdAt)}</p>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Order Details
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Customer
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Amount
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {orders.map((order) => (
+              <tr key={order.id}>
+                <td className="px-6 py-4">
+                  <div>
+                    <div className="font-medium">
+                      {order.products.map((product, idx) => (
+                        <div key={idx}>
+                          {product.quantity}x {product.name}
+                        </div>
+                      ))}
                     </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="font-medium">{order.customerName}</p>
-                      <p className="text-sm text-gray-500">{order.customerEmail}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="font-medium">₹{order.amount.toLocaleString()}</p>
-                      <span className={`inline-flex text-xs leading-5 font-semibold rounded-full px-2 
-                        ${order.paymentStatus === 'COMPLETED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                        {order.paymentStatus}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex text-xs leading-5 font-semibold rounded-full px-2 ${getStatusColor(order.status)}`}>
-                      {order.status}
+                    <p className="text-sm text-gray-500">{formatDate(order.createdAt)}</p>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div>
+                    <p className="font-medium">{order.customerName}</p>
+                    <p className="text-sm text-gray-500">{order.customerEmail}</p>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div>
+                    <p className="font-medium">{formatCurrency(order.totalAmount)}</p>
+                    <span className={`inline-flex text-xs leading-5 font-semibold rounded-full px-2 
+                      ${order.paymentStatus === 'COMPLETED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                      {order.paymentStatus}
                     </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => updateOrderStatus(order.id, 'PROCESSING')}
-                        className="bg-yellow-500 text-white p-2 rounded"
-                        disabled={order.status !== 'PENDING'}
-                        aria-label="Mark order as processing"
-                      >
-                        <FaSpinner />
-                      </button>
-                      <button
-                        onClick={() => updateOrderStatus(order.id, 'SHIPPED')}
-                        className="bg-blue-500 text-white p-2 rounded"
-                        disabled={order.status !== 'PROCESSING'}
-                        aria-label="Mark order as shipped"
-                      >
-                        <FaTruck />
-                      </button>
-                      <button
-                        onClick={() => updateOrderStatus(order.id, 'COMPLETED')}
-                        className="bg-green-500 text-white p-2 rounded"
-                        disabled={order.status !== 'SHIPPED'}
-                        aria-label="Mark order as completed"
-                      >
-                        <FaCheck />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <span className={`inline-flex text-xs leading-5 font-semibold rounded-full px-2 ${getStatusColor(order.status)}`}>
+                    {order.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'PROCESSING')}
+                      className="bg-yellow-500 text-white p-2 rounded"
+                      disabled={order.status !== 'PENDING'}
+                      aria-label="Mark order as processing"
+                    >
+                      <FaSpinner />
+                    </button>
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'SHIPPED')}
+                      className="bg-blue-500 text-white p-2 rounded"
+                      disabled={order.status !== 'PROCESSING'}
+                      aria-label="Mark order as shipped"
+                    >
+                      <FaTruck />
+                    </button>
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'COMPLETED')}
+                      className="bg-green-500 text-white p-2 rounded"
+                      disabled={order.status !== 'SHIPPED'}
+                      aria-label="Mark order as completed"
+                    >
+                      <FaCheck />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

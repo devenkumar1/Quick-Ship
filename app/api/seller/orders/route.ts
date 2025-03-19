@@ -5,7 +5,7 @@ export async function GET(req: NextRequest) {
   try {
     const prisma = new PrismaClient();
     
-    // Get all orders
+    // Get all orders with related data
     const orders = await prisma.order.findMany({
       include: {
         user: {
@@ -14,7 +14,11 @@ export async function GET(req: NextRequest) {
             email: true
           }
         },
-        product: true,
+        items: {
+          include: {
+            product: true
+          }
+        },
         payment: true
       },
       orderBy: {
@@ -27,9 +31,12 @@ export async function GET(req: NextRequest) {
       id: order.id,
       customerName: order.user.name,
       customerEmail: order.user.email,
-      productName: order.product.name,
-      quantity: order.quantity,
-      amount: order.payment?.amount || (order.quantity * Number(order.product.price)),
+      products: order.items.map(item => ({
+        name: item.product.name,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      totalAmount: order.totalAmount,
       status: order.status,
       paymentStatus: order.payment?.status || 'PENDING',
       createdAt: order.createdAt

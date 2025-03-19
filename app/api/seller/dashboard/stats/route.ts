@@ -7,37 +7,67 @@ export async function GET(req: NextRequest) {
     
     // Get count of products
     const productsCount = await prisma.product.count();
-    
-    // Get count of orders and total revenue
+
+    // Get orders with their items and payments
     const orders = await prisma.order.findMany({
       include: {
-        payment: true,
-        product: true
+        items: {
+          include: {
+            product: true
+          }
+        },
+        payment: true
       }
     });
 
-    const ordersCount = orders.length;
-    
-    // Calculate total revenue and pending payments
-    let totalRevenue = 0;
-    let pendingPayments = 0;
+    // Calculate total revenue and other stats
+    const totalRevenue = orders.reduce((sum, order) => sum + Number(order.totalAmount), 0);
+    const totalOrders = orders.length;
+    const totalProducts = productsCount;
 
-    orders.forEach(order => {
-      const amount = order.payment?.amount || (order.quantity * Number(order.product.price));
-      if (order.payment?.status === 'COMPLETED') {
-        totalRevenue += amount;
-      } else {
-        pendingPayments += amount;
+    // Get recent orders
+    const recentOrders = await prisma.order.findMany({
+      take: 5,
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true
+          }
+        },
+        items: {
+          include: {
+            product: true
+          }
+        },
+        payment: true
       }
     });
-    
+
     await prisma.$disconnect();
     
     return NextResponse.json({
-      products: productsCount,
-      orders: ordersCount,
-      revenue: totalRevenue,
-      pendingPayments: pendingPayments
+      stats: {
+        totalRevenue,
+        totalOrders,
+        totalProducts
+      },
+      recentOrders: recentOrders.map(order => ({
+        id: order.id,
+        customerName: order.user.name,
+        products: order.items.map(item => ({
+          name: item.product.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        totalAmount: order.totalAmount,
+        status: order.status,
+        paymentStatus: order.payment?.status || 'PENDING',
+        createdAt: order.createdAt
+      }))
     }, { status: 200 });
     
   } catch (error) {

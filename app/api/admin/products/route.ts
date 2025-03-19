@@ -1,6 +1,10 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
+// Enable Next.js Route Segment Config for caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Revalidate every 5 minutes
+
 export async function GET(req: NextRequest) {
   try {
     const prisma = new PrismaClient();
@@ -70,7 +74,12 @@ export async function GET(req: NextRequest) {
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1
       }
-    }, { status: 200 });
+    }, { 
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60'
+      }
+    });
     
   } catch (error) {
     console.error('Error fetching products:', error);
