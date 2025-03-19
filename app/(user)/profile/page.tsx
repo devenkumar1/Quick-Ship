@@ -8,10 +8,10 @@ import { FaEdit, FaHistory, FaHeart, FaMapMarkerAlt, FaPhone, FaEnvelope, FaCred
 function ProfilePage() {
   // This would be replaced with actual user data from your auth system
   const [user, setUser] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    address: '123 Food Street, Cuisine City, FC 12345',
+    name: 'Mika Singh',
+    email: 'xyz@example.com',
+    phone: '+919999999999',
+    address: '123 Food Street, Goa, India',
     avatarUrl: '/default-avatar.svg', // Updated to use the SVG we created
   });
 
@@ -144,7 +144,7 @@ function ProfilePage() {
                     </div>
                     <div>
                       <p className="font-medium">1x Burger Deluxe</p>
-                      <p className="text-sm text-gray-500">March 15, 2023 • $12.99</p>
+                      <p className="text-sm text-gray-500">March 15, 2025 • ₹199</p>
                     </div>
                   </div>
                   <div className="flex space-x-2">
@@ -172,7 +172,7 @@ function ProfilePage() {
                     </div>
                     <div>
                       <p className="font-medium">1x Margherita Pizza</p>
-                      <p className="text-sm text-gray-500">March 10, 2023 • $14.99</p>
+                      <p className="text-sm text-gray-500">March 10, 2025 • ₹199</p>
                     </div>
                   </div>
                   <div className="flex space-x-2">
@@ -203,7 +203,7 @@ function ProfilePage() {
                   <div className="flex-1">
                     <h3 className="font-medium">Spicy Chicken Burger</h3>
                     <p className="text-sm text-gray-500">Burger King</p>
-                    <p className="text-sm font-medium mt-1">$9.99</p>
+                    <p className="text-sm font-medium mt-1">₹199</p>
                   </div>
                   <button className="p-2 text-red-500 hover:text-red-700">
                     <FaHeart />
@@ -218,7 +218,7 @@ function ProfilePage() {
                   <div className="flex-1">
                     <h3 className="font-medium">Pepperoni Pizza</h3>
                     <p className="text-sm text-gray-500">Pizza Hut</p>
-                    <p className="text-sm font-medium mt-1">$12.99</p>
+                    <p className="text-sm font-medium mt-1">₹199</p>
                   </div>
                   <button className="p-2 text-red-500 hover:text-red-700">
                     <FaHeart />
