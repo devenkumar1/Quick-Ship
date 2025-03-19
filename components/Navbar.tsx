@@ -1,12 +1,18 @@
-'use client';
-import { useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { FaSearch, FaShoppingCart, FaUser, FaBars, FaTimes } from 'react-icons/fa';
+"use client";
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  FaSearch,
+  FaShoppingCart,
+  FaUser,
+  FaBars,
+  FaTimes,
+} from "react-icons/fa";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -27,16 +33,34 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-gray-600 hover:text-blue-600 transition-colors">
+            <Link
+              href="/"
+              className="text-gray-600 hover:text-blue-600 transition-colors"
+            >
               Home
             </Link>
-            <Link href="/categories" className="text-gray-600 hover:text-blue-600 transition-colors">
+            <Link
+              href="/Products"
+              className="text-gray-600 hover:text-blue-600 transition-colors"
+            >
+              Products
+            </Link>
+            <Link
+              href="/categories"
+              className="text-gray-600 hover:text-blue-600 transition-colors"
+            >
               Categories
             </Link>
-            <Link href="/deals" className="text-gray-600 hover:text-blue-600 transition-colors">
+            <Link
+              href="/deals"
+              className="text-gray-600 hover:text-blue-600 transition-colors"
+            >
               Deals
             </Link>
-            <Link href="/about" className="text-gray-600 hover:text-blue-600 transition-colors">
+            <Link
+              href="/about"
+              className="text-gray-600 hover:text-blue-600 transition-colors"
+            >
               About
             </Link>
           </div>
@@ -51,7 +75,7 @@ const Navbar = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <button 
+              <button
                 title="Search"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600"
               >
@@ -62,7 +86,7 @@ const Navbar = () => {
 
           {/* User Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <button 
+            <button
               title="Shopping Cart"
               className="p-2 text-gray-600 hover:text-blue-600 transition-colors relative"
             >
@@ -71,12 +95,13 @@ const Navbar = () => {
                 0
               </span>
             </button>
-            <button 
+            <Link
+              href="/profile"
               title="User Account"
               className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
             >
               <FaUser className="text-xl" />
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -85,7 +110,11 @@ const Navbar = () => {
             className="md:hidden p-2 text-gray-600 hover:text-blue-600"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
+            {isMenuOpen ? (
+              <FaTimes className="text-xl" />
+            ) : (
+              <FaBars className="text-xl" />
+            )}
           </button>
         </div>
 
@@ -99,7 +128,7 @@ const Navbar = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <button 
+            <button
               title="Search"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600"
             >
@@ -111,7 +140,7 @@ const Navbar = () => {
         {/* Mobile Menu */}
         <div
           className={`md:hidden ${
-            isMenuOpen ? 'block' : 'hidden'
+            isMenuOpen ? "block" : "hidden"
           } py-4 border-t border-gray-200`}
         >
           <div className="flex flex-col gap-4">
@@ -121,6 +150,13 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Home
+            </Link>
+            <Link
+              href="/Products"
+              className="text-gray-600 hover:text-blue-600 transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Products
             </Link>
             <Link
               href="/categories"
@@ -144,7 +180,7 @@ const Navbar = () => {
               About
             </Link>
             <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
-              <button 
+              <button
                 title="Shopping Cart"
                 className="p-2 text-gray-600 hover:text-blue-600 transition-colors relative"
               >
@@ -153,12 +189,14 @@ const Navbar = () => {
                   0
                 </span>
               </button>
-              <button 
+              <Link
+                href="/profile"
                 title="User Account"
                 className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
               >
                 <FaUser className="text-xl" />
-              </button>
+              </Link>
             </div>
           </div>
         </div>
