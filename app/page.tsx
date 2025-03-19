@@ -6,7 +6,7 @@ import ProductCard1 from "@/components/ProductCard1";
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50">
-      <Navbar />
+      
       
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 py-12">
@@ -103,7 +103,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-gray-700 mt-8 pt-8 text-sm text-center">
-            © 2024 QuickShip. All rights reserved.
+            © 2025 QuickShip. All rights reserved.
           </div>
         </div>
       </footer>

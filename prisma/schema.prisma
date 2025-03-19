@@ -6,18 +6,22 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 model User {
-  id      String    @id @default(cuid())
-  email   String    @unique
-  password String?
-  name    String
-  role    Role      @default(USER)
-  provider String?
-  providerId String?   
-  orders  Order[]
-  reviews Review[]
-  seller  Seller? 
-  phoneNumber Int?
+  id          String    @id @default(cuid())
+  email       String    @unique
+  password    String?
+  name        String
+  role        Role      @default(USER)
+  provider    String?
+  providerId  String?   
+  orders      Order[]
+  reviews     Review[]
+  seller      Seller? 
+  phoneNumber String?
+  image       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 enum Role {
@@ -27,43 +31,60 @@ enum Role {
 }
 
 model Seller {
-  id       Int    @id @default(autoincrement())
+  id       Int      @id @default(autoincrement())
   userId   String   @unique
-  user     User   @relation(fields: [userId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
   shop     Shop?
 }
 
 model Shop {
-  id         Int       @id @default(autoincrement())
-  name       String
-  sellerId   Int       @unique
-  seller     Seller    @relation(fields: [sellerId], references: [id])
-  products   Product[]
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  logo        String?
+  sellerId    Int       @unique
+  seller      Seller    @relation(fields: [sellerId], references: [id])
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Product {
   id          Int       @id @default(autoincrement())
   name        String
+  description String?
   price       Decimal
   shopId      Int
   shop        Shop      @relation(fields: [shopId], references: [id])
-  orders      Order[]
+  images      String[]  @default([])
+  orderItems  OrderItem[]
   reviews     Review[]
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Order {
-  id          Int       @id @default(autoincrement())
-  quantity    Int
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  productId   Int
-  product     Product   @relation(fields: [productId], references: [id])
-  payment     Payment?
-  reviews     Review[]
-  createdAt   DateTime  @default(now())
-  status      OrderStatus @default(PENDING)
+  id            Int           @id @default(autoincrement())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  items         OrderItem[]
+  totalAmount   Decimal
+  status        OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+  payment       Payment?
+  reviews       Review[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Decimal
 }
 
 enum OrderStatus {
@@ -75,12 +96,13 @@ enum OrderStatus {
 }
 
 model Payment {
-  id        Int       @id @default(autoincrement())
-  orderId   Int       @unique
-  order     Order     @relation(fields: [orderId], references: [id])
+  id        Int           @id @default(autoincrement())
+  orderId   Int          @unique
+  order     Order        @relation(fields: [orderId], references: [id])
   amount    Decimal
   status    PaymentStatus @default(PENDING)
-  createdAt DateTime  @default(now())
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 }
 
 enum PaymentStatus {
@@ -104,9 +126,11 @@ model Review {
 }
 
 model PendingRequest {
-id            Int       @id @default(autoincrement())
-email         String 
-accountType   Role     @default(SELLER)
-ReqStatus    PaymentStatus @default(PENDING) 
-contact      Int  
+  id          Int           @id @default(autoincrement())
+  email       String 
+  accountType Role          @default(SELLER)
+  ReqStatus   PaymentStatus @default(PENDING) 
+  contact     String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
