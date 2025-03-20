@@ -55,12 +55,6 @@ const Navbar = () => {
               href="/deals"
               className="text-gray-600 hover:text-blue-600 transition-colors"
             >
-              Deals
-            </Link>
-            <Link
-              href="/about"
-              className="text-gray-600 hover:text-blue-600 transition-colors"
-            >
               About
             </Link>
           </div>

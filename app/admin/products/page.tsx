@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { FaPlus, FaEdit, FaTrash, FaSearch, FaFilter, FaSort } from 'react-icons/fa';
+import Modal from '@/components/admin/Modal';
+import ProductForm from '@/components/admin/ProductForm';
+import DeleteConfirmationModal from '@/components/admin/DeleteConfirmationModal';
 
 // Define the Product type based on our Prisma schema
 type Product = {
@@ -19,6 +22,7 @@ type Product = {
   createdAt: string;
   updatedAt: string;
   image?: string;
+  description?: string;
 };
 
 export default function AdminProducts() {
@@ -33,38 +37,46 @@ export default function AdminProducts() {
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   
+  // Mock shops data (in a real app, this would be fetched from the API)
+  const shops = [
+    { id: 1, name: 'Grocery Shop' },
+    { id: 2, name: 'Bakery' },
+    { id: 3, name: 'Food Junction' },
+  ];
+  
   // Fetch products from API
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/products');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch products');
-        }
-        
-        const data = await response.json();
-        
-        if (data && data.products) {
-          // Add some sample images since there's no image field in the schema
-          const productsWithImages = data.products.map((product: Product) => ({
-            ...product,
-            image: `https://picsum.photos/seed/${product.id}/300/200`
-          }));
-          
-          setProducts(productsWithImages);
-        } else {
-          setProducts([]);
-        }
-      } catch (err) {
-        console.error('Error fetching products:', err);
-        setError('Failed to load products. Please try again later.');
-      } finally {
-        setLoading(false);
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/products');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch products');
       }
-    };
-    
+      
+      const data = await response.json();
+      
+      if (data && data.products) {
+        // Add some sample images since there's no image field in the schema
+        const productsWithImages = data.products.map((product: Product) => ({
+          ...product,
+          image: `https://picsum.photos/seed/${product.id}/300/200`
+        }));
+        
+        setProducts(productsWithImages);
+      } else {
+        setProducts([]);
+      }
+    } catch (err) {
+      console.error('Error fetching products:', err);
+      setError('Failed to load products. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Load products on component mount
+  useEffect(() => {
     fetchProducts();
   }, []);
 
@@ -76,8 +88,8 @@ export default function AdminProducts() {
   
   // Sort products
   const sortedProducts = [...filteredProducts].sort((a, b) => {
-    let aValue = a[sortField as keyof Product];
-    let bValue = b[sortField as keyof Product];
+    let aValue: any = a[sortField as keyof Product];
+    let bValue: any = b[sortField as keyof Product];
     
     // Handle nested fields like shop.name
     if (sortField === 'shop.name') {
@@ -119,6 +131,7 @@ export default function AdminProducts() {
   
   // Open add product modal
   const handleAddProduct = () => {
+    setCurrentProduct(null);
     setShowAddModal(true);
   };
   
@@ -132,6 +145,79 @@ export default function AdminProducts() {
   const handleDeleteProduct = (product: Product) => {
     setCurrentProduct(product);
     setShowDeleteConfirmation(true);
+  };
+  
+  // Handle form submission for adding a product
+  const handleAddSubmit = async (productData: any) => {
+    try {
+      // In a real app, you would call your API to save the product
+      // For now, we'll just add it to the local state with a mock ID
+      const newProduct = {
+        ...productData,
+        id: Math.max(0, ...products.map(p => p.id)) + 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        shop: shops.find(shop => shop.id === productData.shopId) || { name: 'Unknown Shop' },
+        reviews: []
+      };
+      
+      setProducts([newProduct, ...products]);
+      setShowAddModal(false);
+      
+      // Show success message
+      alert('Product added successfully!');
+    } catch (error) {
+      console.error('Error adding product:', error);
+      alert('Failed to add product. Please try again.');
+    }
+  };
+  
+  // Handle form submission for editing a product
+  const handleEditSubmit = async (productData: any) => {
+    try {
+      // In a real app, you would call your API to update the product
+      // For now, we'll just update it in the local state
+      const updatedProducts = products.map(product => 
+        product.id === productData.id 
+          ? {
+              ...product,
+              ...productData,
+              updatedAt: new Date().toISOString(),
+              shop: shops.find(shop => shop.id === productData.shopId) || product.shop
+            }
+          : product
+      );
+      
+      setProducts(updatedProducts);
+      setShowEditModal(false);
+      
+      // Show success message
+      alert('Product updated successfully!');
+    } catch (error) {
+      console.error('Error updating product:', error);
+      alert('Failed to update product. Please try again.');
+    }
+  };
+  
+  // Handle product deletion
+  const handleDeleteConfirm = async () => {
+    if (!currentProduct) return;
+    
+    try {
+      // In a real app, you would call your API to delete the product
+      // For now, we'll just remove it from the local state
+      const updatedProducts = products.filter(product => product.id !== currentProduct.id);
+      
+      setProducts(updatedProducts);
+      setShowDeleteConfirmation(false);
+      setCurrentProduct(null);
+      
+      // Show success message
+      alert('Product deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      alert('Failed to delete product. Please try again.');
+    }
   };
   
   // Calculate average rating
@@ -157,7 +243,7 @@ export default function AdminProducts() {
           <p>{error}</p>
         </div>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => fetchProducts()}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           Try Again
@@ -218,7 +304,7 @@ export default function AdminProducts() {
                 }}
                 className="appearance-none bg-gray-50 border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="createdAt-desc">Newest First</option>
+                <option value="createdAt-desc">Latest Products</option>
                 <option value="createdAt-asc">Oldest First</option>
                 <option value="name-asc">Name A-Z</option>
                 <option value="name-desc">Name Z-A</option>
@@ -374,8 +460,8 @@ export default function AdminProducts() {
           <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
               <p className="text-sm text-gray-700">
-                Showing <span className="font-medium">1</span> to <span className="font-medium">10</span> of{' '}
-                <span className="font-medium">{products.length}</span> products
+                Showing <span className="font-medium">1</span> to <span className="font-medium">{Math.min(sortedProducts.length, 10)}</span> of{' '}
+                <span className="font-medium">{sortedProducts.length}</span> products
               </p>
             </div>
             <div>
@@ -418,8 +504,44 @@ export default function AdminProducts() {
         </div>
       </div>
       
-      {/* Add/Edit Product Modal would go here */}
-      {/* Delete Confirmation Modal would go here */}
+      {/* Add Product Modal */}
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Add New Product"
+        size="lg"
+      >
+        <ProductForm
+          shops={shops}
+          onSubmit={handleAddSubmit}
+          onCancel={() => setShowAddModal(false)}
+        />
+      </Modal>
+      
+      {/* Edit Product Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Edit Product"
+        size="lg"
+      >
+        <ProductForm
+          product={currentProduct}
+          shops={shops}
+          onSubmit={handleEditSubmit}
+          onCancel={() => setShowEditModal(false)}
+        />
+      </Modal>
+      
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteConfirmation}
+        title="Delete Product"
+        message="Are you sure you want to delete this product? This action cannot be undone."
+        itemName={currentProduct?.name || ''}
+        onCancel={() => setShowDeleteConfirmation(false)}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 } 
