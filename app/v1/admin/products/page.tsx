@@ -25,7 +25,6 @@ export default function ProductManagement() {
   const [sortField, setSortField] = useState<keyof Product>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  // Load mock data - would be replaced with API call
   useEffect(() => {
     // Simulate API call
     setTimeout(() => {
