@@ -1,9 +1,73 @@
+'use client';
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import Navbar from "@/components/Navbar";
+import Link from "next/link";
 import CategoriesDiv from "@/components/CategoriesDiv";
-import ProductCard1 from "@/components/ProductCard1";
+import ProductCard from "@/components/ProductCard";
+
+// Define Product type based on our Prisma schema
+type Product = {
+  id: number;
+  name: string;
+  price: number | string;
+  shopId: number;
+  shop: {
+    name: string;
+  };
+  reviews: Array<{
+    rating: number;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+  image?: string;
+};
 
 export default function Home() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/products');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch products');
+        }
+        
+        const data = await response.json();
+        
+        if (data && data.products) {
+          // Add some sample images since there's no image field in the schema
+          const productsWithImages = data.products.map((product: Product) => ({
+            ...product,
+            image: `https://picsum.photos/seed/${product.id}/300/200`
+          }));
+          
+          // Sort by createdAt date (newest first)
+          const sortedProducts = productsWithImages.sort((a: Product, b: Product) => {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
+          
+          setProducts(sortedProducts);
+        } else {
+          setProducts([]);
+        }
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('Failed to load products');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProducts();
+  }, []);
+
   return (
     <main className="min-h-screen bg-gray-50">
       
@@ -26,27 +90,47 @@ export default function Home() {
         <CategoriesDiv />
       </section>
 
-      {/* Featured Products Section */}
+      {/* Latest Products Section */}
       <section className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">Featured Products</h2>
-          <button className="text-blue-600 hover:text-blue-700 font-medium">
+          <h2 className="text-2xl font-semibold text-gray-800">Latest Products</h2>
+          <Link href="/Products" className="text-blue-600 hover:text-blue-700 font-medium">
             View All →
-          </button>
+          </Link>
         </div>
         
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 overflow-x-auto pb-4">
-          <ProductCard1 />
-          <ProductCard1 />
-          <ProductCard1 />
-          <ProductCard1 />
-          <ProductCard1 />
-          <ProductCard1 />
-          <ProductCard1 />
-          <ProductCard1 />
-          <ProductCard1 />
-          <ProductCard1 />
+          {loading ? (
+            // Loading skeleton
+            [...Array(5)].map((_, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+                <div className="w-full h-48 bg-gray-200 rounded-lg mb-3"></div>
+                <div className="h-5 bg-gray-200 rounded mb-2 w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2 w-1/2"></div>
+                <div className="h-8 bg-gray-200 rounded mt-3"></div>
+              </div>
+            ))
+          ) : error ? (
+            <div className="col-span-full text-center py-8">
+              <p className="text-red-500">{error}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="col-span-full text-center py-8">
+              <p className="text-gray-500">No products available at the moment.</p>
+            </div>
+          ) : (
+            // Display the first 10 latest products
+            products.slice(0, 10).map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))
+          )}
         </div>
       </section>
 
@@ -87,10 +171,10 @@ export default function Home() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white">Home</a></li>
-                <li><a href="#" className="hover:text-white">Products</a></li>
-                <li><a href="#" className="hover:text-white">Categories</a></li>
-                <li><a href="#" className="hover:text-white">Contact</a></li>
+                <li><Link href="/" className="hover:text-white">Home</Link></li>
+                <li><Link href="/Products" className="hover:text-white">Products</Link></li>
+                <li><Link href="/categories" className="hover:text-white">Categories</Link></li>
+                <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
               </ul>
             </div>
             <div>
