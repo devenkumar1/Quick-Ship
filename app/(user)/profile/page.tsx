@@ -1,19 +1,210 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaEdit, FaHistory, FaHeart, FaMapMarkerAlt, FaPhone, FaEnvelope, FaCreditCard } from 'react-icons/fa';
+import { FaEdit, FaHistory, FaHeart, FaMapMarkerAlt, FaPhone, FaEnvelope, FaCreditCard, FaSpinner } from 'react-icons/fa';
+import axios from 'axios';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+
+// Define types for our data
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  avatarUrl: string;
+  role: string;
+}
+
+interface OrderItem {
+  id: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  price: number;
+  image: string;
+  shopName: string;
+}
+
+interface Order {
+  id: number;
+  date: string;
+  status: string;
+  totalAmount: number;
+  items: OrderItem[];
+}
+
+interface FavoriteProduct {
+  id: number;
+  name: string;
+  image: string;
+  shopName: string;
+}
+
+interface ProfileData {
+  user: UserProfile;
+  recentOrders: Order[];
+  favorites: FavoriteProduct[];
+}
 
 function ProfilePage() {
-  // This would be replaced with actual user data from your auth system
-  const [user, setUser] = useState({
-    name: 'Mika Singh',
-    email: 'xyz@example.com',
-    phone: '+919999999999',
-    address: '123 Food Street, Goa, India',
-    avatarUrl: '/default-avatar.svg', // Updated to use the SVG we created
-  });
+  // Wrap useSession in try-catch in case SessionProvider is not available
+  let sessionStatus = 'loading';
+  let sessionData = null;
+  
+  try {
+    const { data: session, status } = useSession();
+    sessionStatus = status;
+    sessionData = session;
+  } catch (error) {
+    console.error("Error accessing session:", error);
+    sessionStatus = 'unauthenticated';
+  }
+  
+  const router = useRouter();
+  
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('/api/user/profile');
+        setProfileData(response.data);
+        setError('');
+      } catch (err: any) {
+        console.error('Failed to fetch profile data:', err);
+        setError('Failed to load profile data. Please try again.');
+        toast.error('Failed to load profile data');
+        
+        // If API not available, use dummy data in development
+        if (process.env.NODE_ENV === 'development') {
+          setProfileData({
+            user: {
+              id: 'user-1',
+              name: 'Demo User',
+              email: 'demo@example.com',
+              phone: '+919999999999',
+              avatarUrl: '/default-avatar.svg',
+              role: 'USER'
+            },
+            recentOrders: [
+              {
+                id: 1234,
+                date: new Date().toISOString(),
+                status: 'DELIVERED',
+                totalAmount: 199,
+                items: [
+                  {
+                    id: 1,
+                    productId: 1,
+                    productName: 'Burger Deluxe',
+                    quantity: 1,
+                    price: 199,
+                    image: '/burger.svg',
+                    shopName: 'Delicious Restaurant'
+                  }
+                ]
+              },
+              {
+                id: 1233,
+                date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+                status: 'DELIVERED',
+                totalAmount: 299,
+                items: [
+                  {
+                    id: 2,
+                    productId: 2,
+                    productName: 'Margherita Pizza',
+                    quantity: 1,
+                    price: 299,
+                    image: '/pizza.svg',
+                    shopName: 'Pizza Paradise'
+                  }
+                ]
+              }
+            ],
+            favorites: [
+              {
+                id: 1,
+                name: 'Spicy Chicken Burger',
+                image: '/burger.svg',
+                shopName: 'Burger King'
+              },
+              {
+                id: 2,
+                name: 'Pepperoni Pizza',
+                image: '/pizza.svg',
+                shopName: 'Pizza Hut'
+              }
+            ]
+          });
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (sessionStatus === 'authenticated') {
+      fetchProfileData();
+    } else if (sessionStatus === 'unauthenticated') {
+      router.push('/auth/login');
+    }
+  }, [sessionStatus, router]);
+
+  // Show loading state
+  if (loading || sessionStatus === 'loading') {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <FaSpinner className="animate-spin text-lime-600 text-4xl" />
+      </div>
+    );
+  }
+
+  // If not authenticated, this will redirect in the useEffect
+  if (sessionStatus === 'unauthenticated') {
+    return null;
+  }
+
+  // Show error message if there was an error
+  if (error && !profileData) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+          <p className="text-red-700">{error}</p>
+          <button 
+            className="mt-4 bg-lime-600 text-white px-4 py-2 rounded-lg"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // If we have no data yet but no error, show a loading state
+  if (!profileData) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <FaSpinner className="animate-spin text-lime-600 text-4xl" />
+      </div>
+    );
+  }
+
+  const { user, recentOrders, favorites } = profileData;
+
+  // Format date function
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -34,7 +225,11 @@ function ProfilePage() {
                   priority
                 />
               </div>
-              <button className="absolute bottom-1 right-1 bg-lime-600 text-white p-1.5 rounded-full hover:bg-lime-700 transition">
+              <button 
+                className="absolute bottom-1 right-1 bg-lime-600 text-white p-1.5 rounded-full hover:bg-lime-700 transition"
+                aria-label="Edit profile picture"
+                title="Edit profile picture"
+              >
                 <FaEdit className="text-sm" />
               </button>
             </div>
@@ -46,10 +241,12 @@ function ProfilePage() {
                 <FaEnvelope className="mr-2" />
                 <span>{user.email}</span>
               </div>
-              <div className="flex items-center text-gray-500">
-                <FaPhone className="mr-2" />
-                <span>{user.phone}</span>
-              </div>
+              {user.phone && (
+                <div className="flex items-center text-gray-500">
+                  <FaPhone className="mr-2" />
+                  <span>{user.phone}</span>
+                </div>
+              )}
             </div>
           </div>
           
@@ -65,7 +262,7 @@ function ProfilePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="md:col-span-1">
-          {/* Delivery Addresses */}
+          {/* Delivery Addresses - Placeholder for future feature */}
           <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
             <div className="p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Delivery Addresses</h2>
@@ -75,11 +272,11 @@ function ProfilePage() {
                   <FaMapMarkerAlt className="text-lime-600 mt-1 mr-3" />
                   <div>
                     <h3 className="font-medium">Home</h3>
-                    <p className="text-sm text-gray-600">{user.address}</p>
+                    <p className="text-sm text-gray-600">Add your home address</p>
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <button className="text-lime-600 text-sm hover:text-lime-800">Edit</button>
+                  <button className="text-lime-600 text-sm hover:text-lime-800">Add</button>
                 </div>
               </div>
               
@@ -89,7 +286,7 @@ function ProfilePage() {
             </div>
           </div>
           
-          {/* Payment Methods */}
+          {/* Payment Methods - Placeholder for future feature */}
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Payment Methods</h2>
@@ -98,12 +295,12 @@ function ProfilePage() {
                 <div className="flex items-center mb-2">
                   <FaCreditCard className="text-lime-600 mr-3" />
                   <div>
-                    <h3 className="font-medium">Visa ending in 4242</h3>
-                    <p className="text-sm text-gray-600">Expires 12/25</p>
+                    <h3 className="font-medium">Add a payment method</h3>
+                    <p className="text-sm text-gray-600">No payment methods saved yet</p>
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <button className="text-lime-600 text-sm hover:text-lime-800">Edit</button>
+                  <button className="text-lime-600 text-sm hover:text-lime-800">Add</button>
                 </div>
               </div>
               
@@ -126,61 +323,63 @@ function ProfilePage() {
                 </Link>
               </div>
               
-              {/* Sample Order */}
-              <div className="border rounded-lg overflow-hidden mb-4">
-                <div className="p-4 border-b">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <span className="text-sm text-gray-500">Order #1234</span>
-                      <h3 className="font-medium">Delicious Restaurant</h3>
-                    </div>
-                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Delivered</span>
-                  </div>
+              {recentOrders.length === 0 ? (
+                <div className="border rounded-lg p-6 text-center text-gray-500">
+                  <p>You haven't placed any orders yet.</p>
+                  <Link href="/" className="mt-4 inline-block text-lime-600 hover:text-lime-800">
+                    Browse Products
+                  </Link>
                 </div>
-                <div className="p-4 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg mr-3 overflow-hidden flex items-center justify-center">
-                      <Image src="/burger.svg" alt="Burger" width={40} height={40} />
+              ) : (
+                recentOrders.map(order => (
+                  <div key={order.id} className="border rounded-lg overflow-hidden mb-4">
+                    <div className="p-4 border-b">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-sm text-gray-500">Order #{order.id}</span>
+                          <h3 className="font-medium">{order.items[0]?.shopName || 'Store'}</h3>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-sm ${
+                          order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' : 
+                          order.status === 'PROCESSING' ? 'bg-blue-100 text-blue-800' :
+                          order.status === 'SHIPPED' ? 'bg-purple-100 text-purple-800' :
+                          order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {order.status.charAt(0) + order.status.slice(1).toLowerCase()}
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">1x Burger Deluxe</p>
-                      <p className="text-sm text-gray-500">March 15, 2025 • ₹199</p>
+                    <div className="p-4 flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 bg-gray-200 rounded-lg mr-3 overflow-hidden flex items-center justify-center">
+                          <Image 
+                            src={order.items[0]?.image || '/default-product.svg'} 
+                            alt={order.items[0]?.productName || 'Product'} 
+                            width={40} 
+                            height={40}
+                          />
+                        </div>
+                        <div>
+                          <p className="font-medium">
+                            {order.items[0]?.quantity}x {order.items[0]?.productName}
+                            {order.items.length > 1 ? ` + ${order.items.length - 1} more` : ''}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {formatDate(order.date)} • ₹{order.totalAmount.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button className="text-lime-600 hover:text-lime-800 text-sm">Reorder</button>
+                        <Link href={`/orders/${order.id}`} className="text-lime-600 hover:text-lime-800 text-sm">
+                          Details
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex space-x-2">
-                    <button className="text-lime-600 hover:text-lime-800 text-sm">Reorder</button>
-                    <button className="text-lime-600 hover:text-lime-800 text-sm">Details</button>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Sample Order */}
-              <div className="border rounded-lg overflow-hidden">
-                <div className="p-4 border-b">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <span className="text-sm text-gray-500">Order #1233</span>
-                      <h3 className="font-medium">Pizza Paradise</h3>
-                    </div>
-                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Delivered</span>
-                  </div>
-                </div>
-                <div className="p-4 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg mr-3 overflow-hidden flex items-center justify-center">
-                      <Image src="/pizza.svg" alt="Pizza" width={40} height={40} />
-                    </div>
-                    <div>
-                      <p className="font-medium">1x Margherita Pizza</p>
-                      <p className="text-sm text-gray-500">March 10, 2025 • ₹199</p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button className="text-lime-600 hover:text-lime-800 text-sm">Reorder</button>
-                    <button className="text-lime-600 hover:text-lime-800 text-sm">Details</button>
-                  </div>
-                </div>
-              </div>
+                ))
+              )}
             </div>
           </div>
           
@@ -194,37 +393,40 @@ function ProfilePage() {
                 </Link>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Favorite Item */}
-                <div className="border rounded-lg p-4 flex items-center">
-                  <div className="w-16 h-16 bg-gray-200 rounded-lg mr-4 overflow-hidden flex items-center justify-center">
-                    <Image src="/burger.svg" alt="Burger" width={48} height={48} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium">Spicy Chicken Burger</h3>
-                    <p className="text-sm text-gray-500">Burger King</p>
-                    <p className="text-sm font-medium mt-1">₹199</p>
-                  </div>
-                  <button className="p-2 text-red-500 hover:text-red-700">
-                    <FaHeart />
-                  </button>
+              {favorites.length === 0 ? (
+                <div className="border rounded-lg p-6 text-center text-gray-500">
+                  <p>You don't have any favorite items yet.</p>
+                  <Link href="/" className="mt-4 inline-block text-lime-600 hover:text-lime-800">
+                    Browse Products
+                  </Link>
                 </div>
-                
-                {/* Favorite Item */}
-                <div className="border rounded-lg p-4 flex items-center">
-                  <div className="w-16 h-16 bg-gray-200 rounded-lg mr-4 overflow-hidden flex items-center justify-center">
-                    <Image src="/pizza.svg" alt="Pizza" width={48} height={48} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium">Pepperoni Pizza</h3>
-                    <p className="text-sm text-gray-500">Pizza Hut</p>
-                    <p className="text-sm font-medium mt-1">₹199</p>
-                  </div>
-                  <button className="p-2 text-red-500 hover:text-red-700">
-                    <FaHeart />
-                  </button>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {favorites.map(item => (
+                    <div key={item.id} className="border rounded-lg p-4 flex items-center">
+                      <div className="w-16 h-16 bg-gray-200 rounded-lg mr-4 overflow-hidden flex items-center justify-center">
+                        <Image 
+                          src={item.image} 
+                          alt={item.name} 
+                          width={48} 
+                          height={48} 
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-medium">{item.name}</h3>
+                        <p className="text-sm text-gray-500">{item.shopName}</p>
+                      </div>
+                      <button 
+                        className="p-2 text-red-500 hover:text-red-700"
+                        aria-label={`Remove ${item.name} from favorites`}
+                        title={`Remove ${item.name} from favorites`}
+                      >
+                        <FaHeart />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
