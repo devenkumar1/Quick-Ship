@@ -147,7 +147,7 @@ export default function ProductForm({ product, shops, onSubmit, onCancel }: Prod
               <div className="space-y-1 text-center">
                 <FaUpload className="mx-auto h-12 w-12 text-gray-400" />
                 <div className="text-sm text-gray-600">
-                  <span className="font-medium text-blue-600 hover:text-blue-500">
+                  <span className="font-medium text-lime-600 hover:text-lime-500">
                     Upload an image
                   </span>
                   <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
@@ -179,7 +179,7 @@ export default function ProductForm({ product, shops, onSubmit, onCancel }: Prod
           onChange={handleChange}
           className={`w-full px-4 py-2 rounded-lg border ${
             errors.name ? 'border-red-500' : 'border-gray-300'
-          } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          } focus:outline-none focus:ring-2 focus:ring-lime-500`}
         />
         {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
       </div>
@@ -198,7 +198,7 @@ export default function ProductForm({ product, shops, onSubmit, onCancel }: Prod
           placeholder="0.00"
           className={`w-full px-4 py-2 rounded-lg border ${
             errors.price ? 'border-red-500' : 'border-gray-300'
-          } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          } focus:outline-none focus:ring-2 focus:ring-lime-500`}
         />
         {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
       </div>
@@ -213,7 +213,7 @@ export default function ProductForm({ product, shops, onSubmit, onCancel }: Prod
           name="shopId"
           value={formData.shopId}
           onChange={handleChange}
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-lime-500"
         >
           {shops.map((shop) => (
             <option key={shop.id} value={shop.id}>
@@ -234,7 +234,7 @@ export default function ProductForm({ product, shops, onSubmit, onCancel }: Prod
           rows={4}
           value={formData.description || ''}
           onChange={handleChange}
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-lime-500"
         />
       </div>
 
@@ -249,7 +249,7 @@ export default function ProductForm({ product, shops, onSubmit, onCancel }: Prod
         </button>
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors"
         >
           {product ? 'Update Product' : 'Add Product'}
         </button>

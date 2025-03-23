@@ -52,7 +52,7 @@ function signup() {
   }
   return (
     <div className='flex items-center justify-center flex-col w-full min-h-screen gap-10 bg-black text-white'>
-      <h1 className='text-5xl text-blue-600 text-center'>Signup</h1>
+      <h1 className='text-5xl text-lime-600 text-center'>Signup</h1>
       <div>
         <form className='flex flex-col gap-3'>
           <label className="input input-bordered flex items-center gap-2">

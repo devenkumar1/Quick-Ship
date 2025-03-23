@@ -19,7 +19,7 @@ function ProfilePage() {
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       {/* Profile Header */}
       <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-32 md:h-48"></div>
+        <div className="bg-gradient-to-r from-lime-500 to-green-600 h-32 md:h-48"></div>
         <div className="px-6 py-4 md:flex md:items-center md:justify-between relative">
           <div className="md:flex md:items-center">
             {/* Avatar */}
@@ -34,7 +34,7 @@ function ProfilePage() {
                   priority
                 />
               </div>
-              <button className="absolute bottom-1 right-1 bg-blue-600 text-white p-1.5 rounded-full hover:bg-blue-700 transition">
+              <button className="absolute bottom-1 right-1 bg-lime-600 text-white p-1.5 rounded-full hover:bg-lime-700 transition">
                 <FaEdit className="text-sm" />
               </button>
             </div>
@@ -54,7 +54,7 @@ function ProfilePage() {
           </div>
           
           <div className="mt-4 md:mt-0">
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+            <button className="bg-lime-600 text-white px-4 py-2 rounded-lg hover:bg-lime-700 transition">
               Edit Profile
             </button>
           </div>
@@ -72,18 +72,18 @@ function ProfilePage() {
               
               <div className="border-b pb-4 mb-4">
                 <div className="flex items-start mb-2">
-                  <FaMapMarkerAlt className="text-blue-600 mt-1 mr-3" />
+                  <FaMapMarkerAlt className="text-lime-600 mt-1 mr-3" />
                   <div>
                     <h3 className="font-medium">Home</h3>
                     <p className="text-sm text-gray-600">{user.address}</p>
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <button className="text-blue-600 text-sm hover:text-blue-800">Edit</button>
+                  <button className="text-lime-600 text-sm hover:text-lime-800">Edit</button>
                 </div>
               </div>
               
-              <button className="w-full py-2 px-4 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition">
+              <button className="w-full py-2 px-4 border border-lime-600 text-lime-600 rounded-lg hover:bg-lime-50 transition">
                 + Add New Address
               </button>
             </div>
@@ -96,18 +96,18 @@ function ProfilePage() {
               
               <div className="border-b pb-4 mb-4">
                 <div className="flex items-center mb-2">
-                  <FaCreditCard className="text-blue-600 mr-3" />
+                  <FaCreditCard className="text-lime-600 mr-3" />
                   <div>
                     <h3 className="font-medium">Visa ending in 4242</h3>
                     <p className="text-sm text-gray-600">Expires 12/25</p>
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <button className="text-blue-600 text-sm hover:text-blue-800">Edit</button>
+                  <button className="text-lime-600 text-sm hover:text-lime-800">Edit</button>
                 </div>
               </div>
               
-              <button className="w-full py-2 px-4 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition">
+              <button className="w-full py-2 px-4 border border-lime-600 text-lime-600 rounded-lg hover:bg-lime-50 transition">
                 + Add Payment Method
               </button>
             </div>
@@ -121,7 +121,7 @@ function ProfilePage() {
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-800">Recent Orders</h2>
-                <Link href="/orders" className="text-blue-600 hover:text-blue-800 text-sm">
+                <Link href="/orders" className="text-lime-600 hover:text-lime-800 text-sm">
                   View All
                 </Link>
               </div>
@@ -148,8 +148,8 @@ function ProfilePage() {
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    <button className="text-blue-600 hover:text-blue-800 text-sm">Reorder</button>
-                    <button className="text-blue-600 hover:text-blue-800 text-sm">Details</button>
+                    <button className="text-lime-600 hover:text-lime-800 text-sm">Reorder</button>
+                    <button className="text-lime-600 hover:text-lime-800 text-sm">Details</button>
                   </div>
                 </div>
               </div>
@@ -176,8 +176,8 @@ function ProfilePage() {
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    <button className="text-blue-600 hover:text-blue-800 text-sm">Reorder</button>
-                    <button className="text-blue-600 hover:text-blue-800 text-sm">Details</button>
+                    <button className="text-lime-600 hover:text-lime-800 text-sm">Reorder</button>
+                    <button className="text-lime-600 hover:text-lime-800 text-sm">Details</button>
                   </div>
                 </div>
               </div>
@@ -189,7 +189,7 @@ function ProfilePage() {
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-800">Favorite Items</h2>
-                <Link href="/favorites" className="text-blue-600 hover:text-blue-800 text-sm">
+                <Link href="/favorites" className="text-lime-600 hover:text-lime-800 text-sm">
                   View All
                 </Link>
               </div>

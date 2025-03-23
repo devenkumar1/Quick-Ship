@@ -48,7 +48,7 @@ const ActivityItem = ({
   const statusColor = 
     status === 'warning' ? 'text-amber-500' : 
     status === 'success' ? 'text-green-500' : 
-    'text-blue-500';
+    'text-lime-600';
   
   return (
     <div className="border-b border-gray-100 py-3 last:border-b-0">
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-lime-600 border-r-transparent"></div>
       </div>
     );
   }
@@ -97,28 +97,28 @@ export default function AdminDashboard() {
           title="Total Products" 
           value="142" 
           trend="+12.5%" 
-          backgroundColor="bg-blue-600"
+          backgroundColor="bg-lime-600"
         />
         <StatCard 
           icon={<FaUsers className="text-white" />} 
           title="Total Users" 
           value="2,845" 
           trend="+18.2%" 
-          backgroundColor="bg-green-600"
+          backgroundColor="bg-lime-700"
         />
         <StatCard 
           icon={<FaShoppingCart className="text-white" />} 
           title="Total Orders" 
           value="1,257" 
           trend="+5.3%" 
-          backgroundColor="bg-purple-600"
+          backgroundColor="bg-lime-600"
         />
         <StatCard 
           icon={<FaStore className="text-white" />} 
           title="Total Sellers" 
           value="23" 
           trend="+2.7%" 
-          backgroundColor="bg-amber-600"
+          backgroundColor="bg-lime-700"
         />
       </div>
       
@@ -127,7 +127,7 @@ export default function AdminDashboard() {
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-800">Recent Orders</h2>
-            <a href="/admin/orders" className="text-blue-600 text-sm hover:underline">View All</a>
+            <a href="/admin/orders" className="text-lime-600 text-sm hover:underline">View All</a>
           </div>
           
           <div className="overflow-x-auto">
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
                     <td className="px-4 py-3 text-sm">
                       <span className={`px-2 py-1 rounded-full text-xs ${
                         order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                        order.status === 'Processing' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'Processing' ? 'bg-lime-100 text-lime-800' :
                         'bg-amber-100 text-amber-800'
                       }`}>
                         {order.status}
@@ -207,12 +207,12 @@ export default function AdminDashboard() {
             />
           </div>
           
-          <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-100">
+          <div className="mt-4 p-4 bg-lime-50 rounded-lg border border-lime-100">
             <div className="flex items-start">
-              <FaExclamationTriangle className="text-amber-500 mt-0.5 mr-2" />
+              <FaExclamationTriangle className="text-lime-500 mt-0.5 mr-2" />
               <div>
-                <h4 className="text-sm font-medium text-amber-800">Attention Required</h4>
-                <p className="text-xs text-amber-700 mt-1">
+                <h4 className="text-sm font-medium text-lime-800">Attention Required</h4>
+                <p className="text-xs text-lime-700 mt-1">
                   3 seller requests and 5 product reviews need your attention
                 </p>
               </div>

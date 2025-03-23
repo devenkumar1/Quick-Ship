@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <circle cx="32" cy="32" r="28" fill="#84cc16" />
+  <path d="M16 28 L48 28 L48 36 C48 42 40 44 32 44 C24 44 16 42 16 36 Z" fill="#4d7c0f" />
+  <path d="M16 20 L48 20 L48 28 L16 28 Z" fill="#65a30d" />
+  <path d="M22 16 L42 16 C45 16 48 18 48 20 L16 20 C16 18 19 16 22 16 Z" fill="#84cc16" />
+  <!-- Delivery lines -->
+  <path d="M50 24 L54 24 M50 30 L56 30 M50 36 L54 36" stroke="#ecfccb" stroke-width="3" stroke-linecap="round" />
+</svg> 

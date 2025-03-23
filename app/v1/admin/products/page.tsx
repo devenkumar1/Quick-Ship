@@ -90,7 +90,7 @@ export default function ProductManagement() {
 
   const getSortIcon = (field: keyof Product) => {
     if (field !== sortField) return <FaSort className="ml-1 text-gray-400" />;
-    return sortDirection === 'asc' ? <FaSortUp className="ml-1 text-blue-500" /> : <FaSortDown className="ml-1 text-blue-500" />;
+    return sortDirection === 'asc' ? <FaSortUp className="ml-1 text-lime-500" /> : <FaSortDown className="ml-1 text-lime-500" />;
   };
 
   const handleDeleteProduct = (productId: number) => {
@@ -123,7 +123,7 @@ export default function ProductManagement() {
           <input
             type="text"
             placeholder="Search products or shops..."
-            className="pl-10 pr-4 py-2 w-full border rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            className="pl-10 pr-4 py-2 w-full border rounded-md focus:ring-lime-500 focus:border-lime-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -202,7 +202,7 @@ export default function ProductManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <FaStore className="text-indigo-500 dark:text-indigo-300 mr-2" />
+                        <FaStore className="text-lime-500 dark:text-lime-300 mr-2" />
                         <div className="text-sm text-gray-900 dark:text-white">{product.shopName}</div>
                       </div>
                     </td>
@@ -210,14 +210,14 @@ export default function ProductManagement() {
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => openProductDetails(product)}
-                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                          className="text-lime-600 hover:text-lime-900 dark:text-lime-400 dark:hover:text-lime-300"
                           aria-label={`View product ${product.name} details`}
                         >
                           <FaEye />
                         </button>
                         <Link 
                           href={`/v1/admin/products/${product.id}`}
-                          className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                          className="text-lime-600 hover:text-lime-900 dark:text-lime-400 dark:hover:text-lime-300"
                           aria-label={`Edit product ${product.name}`}
                         >
                           <FaEdit />
@@ -258,7 +258,7 @@ export default function ProductManagement() {
                   className={`px-3 py-1 rounded ${
                     currentPage === 1
                       ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-lime-600 text-white hover:bg-lime-700'
                   }`}
                 >
                   Previous
@@ -287,7 +287,7 @@ export default function ProductManagement() {
                         onClick={() => paginate(pageNum)}
                         className={`px-3 py-1 rounded ${
                           currentPage === pageNum
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-lime-600 text-white'
                             : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                         }`}
                       >
@@ -302,7 +302,7 @@ export default function ProductManagement() {
                   className={`px-3 py-1 rounded ${
                     currentPage === totalPages
                       ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-lime-600 text-white hover:bg-lime-700'
                   }`}
                 >
                   Next
@@ -333,13 +333,13 @@ export default function ProductManagement() {
               <div className="grid grid-cols-1 gap-6">
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{selectedProduct.name}</h4>
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-2">
+                  <p className="text-2xl font-bold text-lime-600 dark:text-lime-400 mt-2">
                     {formatPrice(selectedProduct.price)}
                   </p>
                   
                   <div className="mt-4 space-y-2">
                     <div className="flex items-center">
-                      <FaStore className="text-indigo-500 dark:text-indigo-300 mr-2" />
+                      <FaStore className="text-lime-500 dark:text-lime-300 mr-2" />
                       <span className="text-gray-800 dark:text-gray-200">{selectedProduct.shopName}</span>
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -364,7 +364,7 @@ export default function ProductManagement() {
                 </button>
                 <Link
                   href={`/v1/admin/products/${selectedProduct.id}`}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 bg-lime-600 text-white rounded-md hover:bg-lime-700"
                 >
                   Edit Product
                 </Link>
@@ -381,7 +381,7 @@ export default function ProductManagement() {
           width: 40px;
           height: 40px;
           border-radius: 50%;
-          border-left-color: #3b82f6;
+          border-left-color: #84cc16;
           animation: spin 1s linear infinite;
           margin: 0 auto;
         }
@@ -394,7 +394,7 @@ export default function ProductManagement() {
         @media (prefers-color-scheme: dark) {
           .spinner {
             border: 4px solid rgba(255, 255, 255, 0.1);
-            border-left-color: #3b82f6;
+            border-left-color: #84cc16;
           }
         }
       `}</style>

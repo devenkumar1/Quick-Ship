@@ -83,7 +83,7 @@ export default function ProductDetails({ id }: ProductDetailsProps) {
       <div className="container mx-auto px-4 py-12">
         <div className="flex justify-center items-center min-h-[60vh]">
           <div className="text-center">
-            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-lime-600 border-r-transparent"></div>
             <p className="mt-4 text-lg text-gray-600">Loading product...</p>
           </div>
         </div>
@@ -94,7 +94,7 @@ export default function ProductDetails({ id }: ProductDetailsProps) {
   if (error || !product) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <Link href="/Products" className="flex items-center text-blue-600 hover:text-blue-800 mb-8">
+        <Link href="/Products" className="flex items-center text-lime-600 hover:text-lime-800 mb-8">
           <FaArrowLeft className="mr-2" /> Back to Products
         </Link>
         
@@ -105,7 +105,7 @@ export default function ProductDetails({ id }: ProductDetailsProps) {
             </div>
             <Link 
               href="/Products"
-              className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+              className="inline-block bg-lime-600 text-white px-4 py-2 rounded-lg hover:bg-lime-700 transition"
             >
               Browse All Products
             </Link>
@@ -118,7 +118,7 @@ export default function ProductDetails({ id }: ProductDetailsProps) {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Back link */}
-      <Link href="/Products" className="flex items-center text-blue-600 hover:text-blue-800 mb-8">
+      <Link href="/Products" className="flex items-center text-lime-600 hover:text-lime-800 mb-8">
         <FaArrowLeft className="mr-2" /> Back to Products
       </Link>
       
@@ -149,7 +149,7 @@ export default function ProductDetails({ id }: ProductDetailsProps) {
             </div>
             
             {/* Shop info */}
-            <Link href={`/shop/${product.shopId}`} className="flex items-center text-blue-600 mb-4">
+            <Link href={`/shop/${product.shopId}`} className="flex items-center text-lime-600 mb-4">
               <FaStore className="mr-2" />
               {product.shop.name}
             </Link>
@@ -174,7 +174,7 @@ export default function ProductDetails({ id }: ProductDetailsProps) {
             </div>
             
             {/* Price */}
-            <div className="text-3xl font-bold text-blue-600 mb-6">
+            <div className="text-3xl font-bold text-lime-600 mb-6">
               ₹{typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
             </div>
             
@@ -204,7 +204,7 @@ export default function ProductDetails({ id }: ProductDetailsProps) {
             
             {/* Add to cart button */}
             <button 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors duration-300 mb-6"
+              className="w-full bg-lime-600 hover:bg-lime-700 text-white py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors duration-300 mb-6"
               aria-label="Add to cart"
             >
               <FaShoppingCart />

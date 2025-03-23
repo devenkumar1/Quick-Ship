@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Favicon Generator</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .favicon-container {
+      display: flex;
+      gap: 20px;
+      margin: 30px 0;
+      align-items: center;
+    }
+    .favicon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .favicon img, .favicon svg {
+      border: 1px solid #ccc;
+      padding: 10px;
+      background: #f9f9f9;
+    }
+    h1 {
+      color: #65a30d;
+    }
+    ol {
+      background: #f1f5f9;
+      padding: 20px 20px 20px 40px;
+      border-radius: 8px;
+    }
+    code {
+      background: #e2e8f0;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>QuickShip Favicon Generator</h1>
+  <p>This page displays the favicon SVG and provides instructions for converting it to various PNG formats needed for the website.</p>
+  
+  <div class="favicon-container">
+    <div class="favicon">
+      <h3>16x16 Favicon</h3>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="16" height="16">
+        <circle cx="32" cy="32" r="28" fill="#84cc16" />
+        <path d="M16 28 L48 28 L48 36 C48 42 40 44 32 44 C24 44 16 42 16 36 Z" fill="#4d7c0f" />
+        <path d="M16 20 L48 20 L48 28 L16 28 Z" fill="#65a30d" />
+        <path d="M22 16 L42 16 C45 16 48 18 48 20 L16 20 C16 18 19 16 22 16 Z" fill="#84cc16" />
+        <path d="M50 24 L54 24 M50 30 L56 30 M50 36 L54 36" stroke="#ecfccb" stroke-width="3" stroke-linecap="round" />
+      </svg>
+    </div>
+    
+    <div class="favicon">
+      <h3>32x32 Favicon</h3>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="32" height="32">
+        <circle cx="32" cy="32" r="28" fill="#84cc16" />
+        <path d="M16 28 L48 28 L48 36 C48 42 40 44 32 44 C24 44 16 42 16 36 Z" fill="#4d7c0f" />
+        <path d="M16 20 L48 20 L48 28 L16 28 Z" fill="#65a30d" />
+        <path d="M22 16 L42 16 C45 16 48 18 48 20 L16 20 C16 18 19 16 22 16 Z" fill="#84cc16" />
+        <path d="M50 24 L54 24 M50 30 L56 30 M50 36 L54 36" stroke="#ecfccb" stroke-width="3" stroke-linecap="round" />
+      </svg>
+    </div>
+    
+    <div class="favicon">
+      <h3>180x180 Apple Touch Icon</h3>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="180" height="180">
+        <circle cx="32" cy="32" r="28" fill="#84cc16" />
+        <path d="M16 28 L48 28 L48 36 C48 42 40 44 32 44 C24 44 16 42 16 36 Z" fill="#4d7c0f" />
+        <path d="M16 20 L48 20 L48 28 L16 28 Z" fill="#65a30d" />
+        <path d="M22 16 L42 16 C45 16 48 18 48 20 L16 20 C16 18 19 16 22 16 Z" fill="#84cc16" />
+        <path d="M50 24 L54 24 M50 30 L56 30 M50 36 L54 36" stroke="#ecfccb" stroke-width="3" stroke-linecap="round" />
+      </svg>
+    </div>
+  </div>
+  
+  <h2>Instructions</h2>
+  <ol>
+    <li>Right-click on each SVG icon above and select "Save image as..."</li>
+    <li>Save the 16x16 icon as <code>favicon-16x16.png</code> in the <code>public</code> folder</li>
+    <li>Save the 32x32 icon as <code>favicon-32x32.png</code> in the <code>public</code> folder</li>
+    <li>Save the 180x180 icon as <code>apple-touch-icon.png</code> in the <code>public</code> folder</li>
+  </ol>
+  
+  <p>Alternatively, you can use an online SVG to PNG converter tool:</p>
+  <ol>
+    <li>Open an online SVG to PNG converter (e.g., <a href="https://svgtopng.com/" target="_blank">svgtopng.com</a>)</li>
+    <li>Copy the SVG code from <code>public/favicon.svg</code></li>
+    <li>Convert it to various sizes (16x16, 32x32, and 180x180)</li>
+    <li>Download and save the files with the names mentioned above</li>
+  </ol>
+</body>
+</html> 

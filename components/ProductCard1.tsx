@@ -22,7 +22,7 @@ const ProductCard1 = () => {
         
         {/* Price and Rating */}
         <div className="flex justify-between items-center">
-          <span className="text-xl font-bold text-blue-600">₹ 999</span>
+          <span className="text-xl font-bold text-lime-600">₹ 999</span>
           <div className="flex items-center gap-1">
             <FaStar className="text-yellow-400" />
             <span className="text-sm text-gray-600">4.5 (245)</span>
@@ -33,7 +33,7 @@ const ProductCard1 = () => {
         <span className="text-sm text-gray-500">Shop Name</span>
         
         {/* Add to cart button */}
-        <button className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors duration-300">
+        <button className="mt-2 w-full bg-lime-600 hover:bg-lime-700 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors duration-300">
           <FaShoppingCart />
           Add to Cart
         </button>
