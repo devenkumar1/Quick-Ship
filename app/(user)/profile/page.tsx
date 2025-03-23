@@ -1,54 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaEdit, FaHistory, FaHeart, FaMapMarkerAlt, FaPhone, FaEnvelope, FaCreditCard, FaSpinner } from 'react-icons/fa';
-import axios from 'axios';
+import { FaEdit, FaHeart, FaMapMarkerAlt, FaPhone, FaEnvelope, FaCreditCard, FaSpinner } from 'react-icons/fa';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-
-// Define types for our data
-interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  avatarUrl: string;
-  role: string;
-}
-
-interface OrderItem {
-  id: number;
-  productId: number;
-  productName: string;
-  quantity: number;
-  price: number;
-  image: string;
-  shopName: string;
-}
-
-interface Order {
-  id: number;
-  date: string;
-  status: string;
-  totalAmount: number;
-  items: OrderItem[];
-}
-
-interface FavoriteProduct {
-  id: number;
-  name: string;
-  image: string;
-  shopName: string;
-}
-
-interface ProfileData {
-  user: UserProfile;
-  recentOrders: Order[];
-  favorites: FavoriteProduct[];
-}
+import useUserStore from '@/store/userStore';
 
 function ProfilePage() {
   // Wrap useSession in try-catch in case SessionProvider is not available
@@ -66,100 +25,34 @@ function ProfilePage() {
   
   const router = useRouter();
   
-  const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  // Get data and actions from Zustand store
+  const { 
+    user, 
+    recentOrders, 
+    favorites, 
+    isLoading, 
+    error, 
+    fetchProfileData,
+    removeFromFavorites
+  } = useUserStore();
 
   // Fetch user profile data
   useEffect(() => {
-    const fetchProfileData = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get('/api/user/profile');
-        setProfileData(response.data);
-        setError('');
-      } catch (err: any) {
-        console.error('Failed to fetch profile data:', err);
-        setError('Failed to load profile data. Please try again.');
-        toast.error('Failed to load profile data');
-        
-        // If API not available, use dummy data in development
-        if (process.env.NODE_ENV === 'development') {
-          setProfileData({
-            user: {
-              id: 'user-1',
-              name: 'Demo User',
-              email: 'demo@example.com',
-              phone: '+919999999999',
-              avatarUrl: '/default-avatar.svg',
-              role: 'USER'
-            },
-            recentOrders: [
-              {
-                id: 1234,
-                date: new Date().toISOString(),
-                status: 'DELIVERED',
-                totalAmount: 199,
-                items: [
-                  {
-                    id: 1,
-                    productId: 1,
-                    productName: 'Burger Deluxe',
-                    quantity: 1,
-                    price: 199,
-                    image: '/burger.svg',
-                    shopName: 'Delicious Restaurant'
-                  }
-                ]
-              },
-              {
-                id: 1233,
-                date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                status: 'DELIVERED',
-                totalAmount: 299,
-                items: [
-                  {
-                    id: 2,
-                    productId: 2,
-                    productName: 'Margherita Pizza',
-                    quantity: 1,
-                    price: 299,
-                    image: '/pizza.svg',
-                    shopName: 'Pizza Paradise'
-                  }
-                ]
-              }
-            ],
-            favorites: [
-              {
-                id: 1,
-                name: 'Spicy Chicken Burger',
-                image: '/burger.svg',
-                shopName: 'Burger King'
-              },
-              {
-                id: 2,
-                name: 'Pepperoni Pizza',
-                image: '/pizza.svg',
-                shopName: 'Pizza Hut'
-              }
-            ]
-          });
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (sessionStatus === 'authenticated') {
       fetchProfileData();
     } else if (sessionStatus === 'unauthenticated') {
       router.push('/auth/login');
     }
-  }, [sessionStatus, router]);
+  }, [sessionStatus, fetchProfileData, router]);
+
+  // Handle removing favorites
+  const handleRemoveFavorite = (productId: number) => {
+    removeFromFavorites(productId);
+    toast.success('Removed from favorites');
+  };
 
   // Show loading state
-  if (loading || sessionStatus === 'loading') {
+  if (isLoading || sessionStatus === 'loading') {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <FaSpinner className="animate-spin text-lime-600 text-4xl" />
@@ -173,14 +66,14 @@ function ProfilePage() {
   }
 
   // Show error message if there was an error
-  if (error && !profileData) {
+  if (error && !user) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
           <p className="text-red-700">{error}</p>
           <button 
             className="mt-4 bg-lime-600 text-white px-4 py-2 rounded-lg"
-            onClick={() => window.location.reload()}
+            onClick={() => fetchProfileData()}
           >
             Try Again
           </button>
@@ -190,15 +83,13 @@ function ProfilePage() {
   }
 
   // If we have no data yet but no error, show a loading state
-  if (!profileData) {
+  if (!user) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <FaSpinner className="animate-spin text-lime-600 text-4xl" />
       </div>
     );
   }
-
-  const { user, recentOrders, favorites } = profileData;
 
   // Format date function
   const formatDate = (dateString: string) => {
@@ -420,6 +311,7 @@ function ProfilePage() {
                         className="p-2 text-red-500 hover:text-red-700"
                         aria-label={`Remove ${item.name} from favorites`}
                         title={`Remove ${item.name} from favorites`}
+                        onClick={() => handleRemoveFavorite(item.id)}
                       >
                         <FaHeart />
                       </button>
