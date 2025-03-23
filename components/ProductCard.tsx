@@ -16,7 +16,8 @@ type ProductProps = {
     reviews: Array<{
       rating: number;
     }>;
-    image?: string;
+    images: string[];
+    category: string; 
   }
 }
 
@@ -26,8 +27,7 @@ const ProductCard = ({ product }: ProductProps) => {
     ? (product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length).toFixed(1)
     : "0.0";
 
-  // Use the image property or a default image
-  const productImage = product.image || "https://images.pexels.com/photos/1020370/pexels-photo-1020370.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2";
+  const productImage = product.images[0] ;
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden group relative h-full flex flex-col">
@@ -69,6 +69,7 @@ const ProductCard = ({ product }: ProductProps) => {
             <span className="text-sm text-gray-600">{averageRating} ({product.reviews?.length || 0})</span>
           </div>
         </div>
+            <span className="text-sm text-gray-600">{product.category}</span>
         
         {/* Add to cart button */}
         <button className="mt-auto pt-3 w-full bg-lime-600 hover:bg-lime-700 text-white py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-md group-hover:shadow-lime-200 group-hover:shadow-sm">
