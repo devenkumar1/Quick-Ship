@@ -21,6 +21,8 @@ type Product = {
   createdAt: string;
   updatedAt: string;
   image?: string;
+  images: string[];
+  category: string;
 };
 
 export default function Home() {
@@ -45,7 +47,9 @@ export default function Home() {
           // Add some sample images since there's no image field in the schema
           const productsWithImages = data.products.map((product: Product) => ({
             ...product,
-            image: `https://picsum.photos/seed/${product.id}/300/200`
+            image: `https://picsum.photos/seed/${product.id}/300/200`,
+            images: [`https://picsum.photos/seed/${product.id}/300/200`],
+            category: 'Food' // Default category, adjust as needed
           }));
           
           // Sort by createdAt date (newest first)
