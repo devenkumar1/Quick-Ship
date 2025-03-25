@@ -11,12 +11,23 @@ import {
   FaHome,
   FaBoxOpen,
   FaListUl,
-  FaInfoCircle
+  FaInfoCircle,
+  FaHeart
 } from "react-icons/fa";
+import useCartStore from "@/store/cartStore";
+import useUserStore from "@/store/userStore";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Get cart items count from cart store
+  const { getItemsCount } = useCartStore();
+  const cartItemsCount = getItemsCount();
+  
+  // Get favorites count from user store
+  const { favorites } = useUserStore();
+  const favoritesCount = favorites.length;
 
   return (
     <nav className="sticky top-0 z-50">
@@ -89,15 +100,32 @@ const Navbar = () => {
 
             {/* User Actions */}
             <div className="hidden md:flex items-center gap-4">
-              <button
+              <Link
+                href="/wishlist"
+                title="Wishlist"
+                className="p-2 text-white hover:text-lime-200 transition-colors relative"
+              >
+                <FaHeart className="text-xl" />
+                {favoritesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {favoritesCount}
+                  </span>
+                )}
+              </Link>
+              
+              <Link
+                href="/cart"
                 title="Shopping Cart"
                 className="p-2 text-white hover:text-lime-200 transition-colors relative"
               >
                 <FaShoppingCart className="text-xl" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                  0
-                </span>
-              </button>
+                {cartItemsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {cartItemsCount}
+                  </span>
+                )}
+              </Link>
+              
               <Link
                 href="/profile"
                 title="User Account"
@@ -151,15 +179,15 @@ const Navbar = () => {
         <div className="flex flex-col divide-y divide-lime-100">
           <Link
             href="/"
-            className="px-4 py-3 text-gray-700 hover:bg-lime-50 transition-colors flex items-center gap-2"
+            className="px-4 py-3 hover:bg-lime-50 flex items-center gap-2"
             onClick={() => setIsMenuOpen(false)}
           >
             <FaHome className="text-lime-600" />
             <span>Home</span>
           </Link>
           <Link
-            href="/Products"
-            className="px-4 py-3 text-gray-700 hover:bg-lime-50 transition-colors flex items-center gap-2"
+            href="/products"
+            className="px-4 py-3 hover:bg-lime-50 flex items-center gap-2"
             onClick={() => setIsMenuOpen(false)}
           >
             <FaBoxOpen className="text-lime-600" />
@@ -167,7 +195,7 @@ const Navbar = () => {
           </Link>
           <Link
             href="/categories"
-            className="px-4 py-3 text-gray-700 hover:bg-lime-50 transition-colors flex items-center gap-2"
+            className="px-4 py-3 hover:bg-lime-50 flex items-center gap-2"
             onClick={() => setIsMenuOpen(false)}
           >
             <FaListUl className="text-lime-600" />
@@ -175,38 +203,46 @@ const Navbar = () => {
           </Link>
           <Link
             href="/deals"
-            className="px-4 py-3 text-gray-700 hover:bg-lime-50 transition-colors flex items-center gap-2"
+            className="px-4 py-3 hover:bg-lime-50 flex items-center gap-2"
             onClick={() => setIsMenuOpen(false)}
           >
             <FaInfoCircle className="text-lime-600" />
             <span>About</span>
           </Link>
-          
-          <div className="px-4 py-3 flex items-center justify-around">
-            <Link
-              href="/cart"
-              title="Shopping Cart"
-              className="flex flex-col items-center text-gray-700 hover:text-lime-600 transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <div className="relative">
-                <FaShoppingCart className="text-xl" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  0
-                </span>
-              </div>
-              <span className="text-sm mt-1">Cart</span>
-            </Link>
-            <Link
-              href="/profile"
-              title="User Account"
-              className="flex flex-col items-center text-gray-700 hover:text-lime-600 transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <FaUser className="text-xl" />
-              <span className="text-sm mt-1">Profile</span>
-            </Link>
-          </div>
+          <Link
+            href="/wishlist"
+            className="px-4 py-3 hover:bg-lime-50 flex items-center gap-2"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <FaHeart className="text-lime-600" />
+            <span>Wishlist</span>
+            {favoritesCount > 0 && (
+              <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                {favoritesCount}
+              </span>
+            )}
+          </Link>
+          <Link
+            href="/cart"
+            className="px-4 py-3 hover:bg-lime-50 flex items-center gap-2"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <FaShoppingCart className="text-lime-600" />
+            <span>Cart</span>
+            {cartItemsCount > 0 && (
+              <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                {cartItemsCount}
+              </span>
+            )}
+          </Link>
+          <Link
+            href="/profile"
+            className="px-4 py-3 hover:bg-lime-50 flex items-center gap-2"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <FaUser className="text-lime-600" />
+            <span>Profile</span>
+          </Link>
         </div>
       </div>
     </nav>

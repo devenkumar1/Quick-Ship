@@ -48,6 +48,8 @@ interface UserState {
   setUser: (user: UserProfile) => void;
   addToFavorites: (product: FavoriteProduct) => void;
   removeFromFavorites: (productId: number) => void;
+  clearFavorites: () => void;
+  isFavorite: (productId: number) => boolean;
 }
 
 // Create the store
@@ -67,7 +69,11 @@ const useUserStore = create<UserState>()(
           set({ isLoading: true, error: null });
           
           const response = await axios.get('/api/user/profile');
-          const data = response.data;
+          const data = response.data as { 
+            user: UserProfile;
+            recentOrders: Order[];
+            favorites: FavoriteProduct[];
+          };
           
           set({
             user: data.user,
@@ -168,6 +174,10 @@ const useUserStore = create<UserState>()(
         // Check if product already exists in favorites
         if (!currentFavorites.some(fav => fav.id === product.id)) {
           set({ favorites: [...currentFavorites, product] });
+          
+          // If we have an authenticated user, we could also update the server
+          // This would make an API call to save the favorite for the current user
+          // Example: if (get().user) axios.post('/api/user/favorites', { productId: product.id });
         }
       },
 
@@ -177,6 +187,19 @@ const useUserStore = create<UserState>()(
         set({
           favorites: currentFavorites.filter(fav => fav.id !== productId)
         });
+        
+        // If we have an authenticated user, we could also update the server
+        // Example: if (get().user) axios.delete(`/api/user/favorites/${productId}`);
+      },
+      
+      // Clear all favorites
+      clearFavorites: () => {
+        set({ favorites: [] });
+      },
+      
+      // Check if a product is in favorites
+      isFavorite: (productId) => {
+        return get().favorites.some(fav => fav.id === productId);
       }
     }),
     {

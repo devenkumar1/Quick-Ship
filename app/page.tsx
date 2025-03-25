@@ -1,72 +1,25 @@
 'use client';
-
-import { useState, useEffect } from "react";
-import Image from "next/image";
+import React, { useEffect } from "react";
 import Link from "next/link";
-import CategoriesDiv from "@/components/CategoriesDiv";
+import Image from "next/image";
+import { FaSearch, FaChevronRight } from "react-icons/fa";
 import ProductCard from "@/components/ProductCard";
-
-// Define Product type based on our Prisma schema
-type Product = {
-  id: number;
-  name: string;
-  price: number | string;
-  shopId: number;
-  shop: {
-    name: string;
-  };
-  reviews: Array<{
-    rating: number;
-  }>;
-  createdAt: string;
-  updatedAt: string;
-  image?: string;
-};
+import useProductStore from "@/store/productStore";
 
 export default function Home() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Use product store instead of local state
+  const { 
+    products, 
+    featuredProducts, 
+    isLoading, 
+    error, 
+    fetchProducts 
+  } = useProductStore();
 
   // Fetch products from API
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/products');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch products');
-        }
-        
-        const data = await response.json();
-        
-        if (data && data.products) {
-          // Add some sample images since there's no image field in the schema
-          const productsWithImages = data.products.map((product: Product) => ({
-            ...product,
-            image: `https://picsum.photos/seed/${product.id}/300/200`
-          }));
-          
-          // Sort by createdAt date (newest first)
-          const sortedProducts = productsWithImages.sort((a: Product, b: Product) => {
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          });
-          
-          setProducts(sortedProducts);
-        } else {
-          setProducts([]);
-        }
-      } catch (err) {
-        console.error('Error fetching products:', err);
-        setError('Failed to load products');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     fetchProducts();
-  }, []);
+  }, [fetchProducts]);
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -98,7 +51,7 @@ export default function Home() {
                 Order Now
               </Link>
               <Link href="/categories" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 rounded-lg font-medium transition-all duration-300 text-lg">
-                Explore Menu
+                Browse Categories
               </Link>
             </div>
           </div>
@@ -106,71 +59,116 @@ export default function Home() {
       </section>
 
       {/* Categories Section */}
-      <section className="bg-gradient-to-br from-lime-50 to-lime-100 py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-lime-800 mb-3">Browse Categories</h2>
-            <p className="text-lime-700 text-lg max-w-2xl mx-auto">Explore our wide range of products by category</p>
-            <div className="w-20 h-1 bg-gradient-to-r from-lime-600 to-lime-400 mx-auto mt-4"></div>
+      <section className="py-16 px-4">
+        <div className="container mx-auto">
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Shop by Category</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">Browse our wide selection of products across various categories</p>
           </div>
-          <CategoriesDiv />
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {/* Categories would be dynamically generated from API */}
+            {['Food', 'Electronics', 'Clothing', 'Books', 'Home', 'Beauty'].map((category, index) => (
+              <Link href={`/categories/${category.toLowerCase()}`} key={index} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6 text-center group">
+                <div className="w-16 h-16 bg-lime-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-lime-200 transition-colors">
+                  <span className="text-lime-700 text-xl">
+                    {category.charAt(0)}
+                  </span>
+                </div>
+                <h3 className="font-medium text-gray-800 group-hover:text-lime-700 transition-colors">{category}</h3>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Products Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-wrap items-center justify-between mb-10">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-800">Featured Products</h2>
+              <p className="text-gray-600 mt-2">Explore our most popular items</p>
+            </div>
+            <Link href="/Products" className="text-lime-700 flex items-center hover:text-lime-800 font-medium">
+              View All <FaChevronRight className="ml-2" />
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
+            {isLoading ? (
+              // Loading skeleton
+              Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="animate-pulse bg-gray-100 rounded-xl h-80"></div>
+              ))
+            ) : error ? (
+              <div className="col-span-full text-center py-8">
+                <p className="text-red-500">{error}</p>
+                <button 
+                  onClick={() => fetchProducts()} 
+                  className="mt-2 bg-lime-600 text-white px-6 py-2 rounded-lg hover:bg-lime-700 transition-all hover:shadow-lg"
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : featuredProducts.length === 0 ? (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-500">No products available at the moment.</p>
+              </div>
+            ) : (
+              // Display featured products
+              featuredProducts.map(product => (
+                <div key={product.id} className="h-full transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+                  <ProductCard product={product} />
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </section>
 
       {/* Latest Products Section */}
-      <section className="container mx-auto px-4 py-16 bg-gradient-to-b from-white to-lime-50 rounded-xl shadow-md my-12">
-        <div className="flex justify-between items-center mb-10">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 relative inline-block">
-              Latest Products
-              <span className="absolute -bottom-2 left-0 w-2/3 h-1 bg-lime-500 rounded-full"></span>
-            </h2>
-            <p className="text-gray-600 mt-3 text-lg">Fresh from our partners</p>
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-wrap items-center justify-between mb-10">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-800">Latest Products</h2>
+              <p className="text-gray-600 mt-2">Fresh arrivals just for you</p>
+            </div>
+            <Link href="/Products" className="text-lime-700 flex items-center hover:text-lime-800 font-medium">
+              View All <FaChevronRight className="ml-2" />
+            </Link>
           </div>
-          <Link 
-            href="/Products" 
-            className="text-lime-700 hover:text-lime-800 font-medium text-lg flex items-center gap-1 group relative overflow-hidden py-2 px-4 rounded-lg transition-all duration-300 border border-lime-500 hover:bg-lime-100"
-          >
-            <span>View All</span>
-            <span className="text-xl transition-transform duration-300 group-hover:translate-x-1">→</span>
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-lime-500 transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-        </div>
-        
-        {/* Product Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 pb-8">
-          {loading ? (
-            // Loading skeleton
-            [...Array(5)].map((_, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse transform transition-transform duration-300 hover:-translate-y-1">
-                <div className="w-full h-48 bg-gray-200 rounded-lg mb-3"></div>
-                <div className="h-5 bg-gray-200 rounded mb-2 w-3/4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2 w-1/2"></div>
-                <div className="h-8 bg-gray-200 rounded mt-3"></div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {isLoading ? (
+              // Loading skeleton
+              Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="animate-pulse bg-gray-100 rounded-xl h-64"></div>
+              ))
+            ) : error ? (
+              <div className="col-span-full text-center py-8">
+                <p className="text-red-500">{error}</p>
+                <button 
+                  onClick={() => fetchProducts()} 
+                  className="mt-2 bg-lime-600 text-white px-6 py-2 rounded-lg hover:bg-lime-700 transition-all hover:shadow-lg"
+                >
+                  Try Again
+                </button>
               </div>
-            ))
-          ) : error ? (
-            <div className="col-span-full text-center py-8">
-              <p className="text-red-500">{error}</p>
-              <button 
-                onClick={() => window.location.reload()} 
-                className="mt-2 bg-lime-600 text-white px-6 py-2 rounded-lg hover:bg-lime-700 transition-all hover:shadow-lg"
-              >
-                Try Again
-              </button>
-            </div>
-          ) : products.length === 0 ? (
-            <div className="col-span-full text-center py-8">
-              <p className="text-gray-500">No products available at the moment.</p>
-            </div>
-          ) : (
-            // Display the first 10 latest products
-            products.slice(0, 10).map(product => (
-              <div key={product.id} className="h-full transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
-                <ProductCard product={product} />
+            ) : products.length === 0 ? (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-500">No products available at the moment.</p>
               </div>
-            ))
-          )}
+            ) : (
+              // Display the first 8 latest products
+              products.slice(0, 8).map(product => (
+                <div key={product.id} className="h-full transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+                  <ProductCard product={product} />
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </section>
 
