@@ -1,29 +1,18 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaEdit, FaHeart, FaMapMarkerAlt, FaPhone, FaEnvelope, FaCreditCard, FaSpinner } from 'react-icons/fa';
-import { useSession } from 'next-auth/react';
+import { FaEdit, FaHeart, FaMapMarkerAlt, FaPhone, FaEnvelope, FaCreditCard, FaSpinner, FaSignOutAlt } from 'react-icons/fa';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import useUserStore from '@/store/userStore';
 
-function ProfilePage() {
-  // Wrap useSession in try-catch in case SessionProvider is not available
-  let sessionStatus = 'loading';
-  let sessionData = null;
-  
-  try {
-    const { data: session, status } = useSession();
-    sessionStatus = status;
-    sessionData = session;
-  } catch (error) {
-    console.error("Error accessing session:", error);
-    sessionStatus = 'unauthenticated';
-  }
-  
+export default function ProfilePage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const [mounted, setMounted] = useState(false);
   
   // Get data and actions from Zustand store
   const { 
@@ -36,14 +25,19 @@ function ProfilePage() {
     removeFromFavorites
   } = useUserStore();
 
+  // Handle client-side mounting
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Fetch user profile data
   useEffect(() => {
-    if (sessionStatus === 'authenticated') {
+    if (status === 'authenticated') {
       fetchProfileData();
-    } else if (sessionStatus === 'unauthenticated') {
+    } else if (status === 'unauthenticated') {
       router.push('/auth/login');
     }
-  }, [sessionStatus, fetchProfileData, router]);
+  }, [status, fetchProfileData, router]);
 
   // Handle removing favorites
   const handleRemoveFavorite = (productId: number) => {
@@ -51,8 +45,19 @@ function ProfilePage() {
     toast.success('Removed from favorites');
   };
 
-  // Show loading state
-  if (isLoading || sessionStatus === 'loading') {
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await signOut({ redirect: false });
+      toast.success('Logged out successfully');
+      router.push('/');
+    } catch (error) {
+      toast.error('Failed to logout');
+    }
+  };
+
+  // Show loading state while mounting or checking authentication
+  if (!mounted || status === 'loading') {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <FaSpinner className="animate-spin text-lime-600 text-4xl" />
@@ -61,7 +66,7 @@ function ProfilePage() {
   }
 
   // If not authenticated, this will redirect in the useEffect
-  if (sessionStatus === 'unauthenticated') {
+  if (status === 'unauthenticated') {
     return null;
   }
 
@@ -141,9 +146,16 @@ function ProfilePage() {
             </div>
           </div>
           
-          <div className="mt-4 md:mt-0">
+          <div className="mt-4 md:mt-0 flex space-x-3">
             <button className="bg-lime-600 text-white px-4 py-2 rounded-lg hover:bg-lime-700 transition">
               Edit Profile
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition flex items-center"
+            >
+              <FaSignOutAlt className="mr-2" />
+              Logout
             </button>
           </div>
         </div>
@@ -326,5 +338,3 @@ function ProfilePage() {
     </div>
   );
 }
-
-export default ProfilePage;

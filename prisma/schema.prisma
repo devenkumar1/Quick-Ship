@@ -123,8 +123,8 @@ model Review {
   product     Product   @relation(fields: [productId], references: [id])
   userId      String
   user        User      @relation(fields: [userId], references: [id])
-  orderId     Int
-  order       Order     @relation(fields: [orderId], references: [id])
+  orderId     Int?
+  order       Order?    @relation(fields: [orderId], references: [id])
   createdAt   DateTime  @default(now())
 }
 
