@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const client = new PrismaClient;
 export async function POST(req:NextRequest) {
     const reqBody=await req.json();
-    const {name, price,shopId}=reqBody ;
+    const {name, price,shopId,description,category}=reqBody ;
     console.log(reqBody);
     if(!name ||!price ||!shopId){
         return NextResponse.json({message:"all fileds are mandatory"},{status:400});
@@ -13,7 +13,9 @@ export async function POST(req:NextRequest) {
         data:{
           name:name,
           price:price,
-          shopId:shopId
+          shopId:shopId,
+          description:description,
+          category:category
          }
     })
     

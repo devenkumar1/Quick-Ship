@@ -9,6 +9,7 @@ interface Product {
   id: number;
   name: string;
   description: string | null;
+  category: string | null;
   price: number;
   images: string[];
   shopId: number;
@@ -33,6 +34,7 @@ export default function SellerProducts() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    category: '', 
     price: '',
     images: [] as string[]
   });
@@ -114,7 +116,7 @@ export default function SellerProducts() {
       }
       
       setShowModal(false);
-      setFormData({ name: '', description: '', price: '', images: [] });
+      setFormData({ name: '', description: '', price: '', images: [], category: '' });
       setEditingProduct(null);
       fetchProducts();
     } catch (err: any) {
@@ -133,7 +135,8 @@ export default function SellerProducts() {
       name: product.name,
       description: product.description || '',
       price: product.price.toString(),
-      images: product.images || []
+      images: product.images || [],
+      category: product.category || ''
     });
     setShowModal(true);
   };
@@ -161,7 +164,7 @@ export default function SellerProducts() {
         <button
           onClick={() => {
             setEditingProduct(null);
-            setFormData({ name: '', description: '', price: '', images: [] });
+            setFormData({ name: '', description: '', price: '', images: [],category:'' });
             setShowModal(true);
           }}
           className="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center"
@@ -291,6 +294,19 @@ export default function SellerProducts() {
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
+                  Category
+                </label>
+                <input
+                  type="text"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
+                  required
+                  placeholder="Enter product  category. ex:stationary,food,clothes,etc. "
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2">
                   Price (₹)
                 </label>
                 <input
@@ -309,7 +325,7 @@ export default function SellerProducts() {
                   type="button"
                   onClick={() => {
                     setShowModal(false);
-                    setFormData({ name: '', description: '', price: '', images: [] });
+                    setFormData({ name: '', description: '', price: '', images: [],category:'' });
                     setEditingProduct(null);
                   }}
                   className="bg-gray-500 text-white px-4 py-2 rounded"

@@ -8,104 +8,150 @@ datasource db {
 }
 
 model User {
-  id          String    @id @default(cuid())
-  email       String    @unique
-  password    String?
-  name        String
-  role        Role      @default(USER)
-  provider    String?
-  providerId  String?   
-  orders      Order[]
-  reviews     Review[]
-  seller      Seller? 
-  phoneNumber String?
-  isVerified  Boolean   @default(false)
-  image       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now()) @updatedAt
-
+  id                String    @id
+  email             String    @unique
+  name              String
+  role              Role      @default(USER)
+  provider          String?
+  providerId        String?
+  password          String?
+  phoneNumber       String?
+  createdAt         DateTime  @default(now())
+  image             String?
+  updatedAt         DateTime  @default(now()) @updatedAt
+  isVerified        Boolean   @default(false)
+  orders            Order[]
+  reviews           Review[]
+  seller            Seller?
+  sellerApplications SellerApplication[]
 }
 
-enum Role {
-  USER
-  ADMIN
-  SELLER
+model SellerApplication {
+  id          Int      @id @default(autoincrement())
+  phone       String
+  shopName    String
+  location    String
+  description String   @db.Text
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model Seller {
-  id       Int      @id @default(autoincrement())
-  userId   String   @unique
-  user     User     @relation(fields: [userId], references: [id])
-  shop     Shop?
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  shop      Shop?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model Shop {
   id          Int       @id @default(autoincrement())
   name        String
-  description String?
-  logo        String?
   sellerId    Int       @unique
-  seller      Seller    @relation(fields: [sellerId], references: [id])
-  products    Product[]
   createdAt   DateTime  @default(now())
+  description String?   @db.Text
+  location    String?
   updatedAt   DateTime  @default(now()) @updatedAt
+  products    Product[]
+  seller      Seller    @relation(fields: [sellerId], references: [id])
 }
 
 model Product {
-  id          Int       @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   name        String
-  description String?
-  price       Decimal
-  category    String  @default(" ")
+  description String?     @db.Text
+  price       Decimal     @db.Decimal(10, 2)
   shopId      Int
-  shop        Shop      @relation(fields: [shopId], references: [id])
-  images      String[]  @default([])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @default(now()) @updatedAt
+  images      String[]
+  category    String      @default(" ")
   orderItems  OrderItem[]
+  shop        Shop        @relation(fields: [shopId], references: [id])
   reviews     Review[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now()) @updatedAt
+
+  @@index([shopId])
 }
 
 model Order {
-  id            Int           @id @default(autoincrement())
-  userId        String
-  user          User          @relation(fields: [userId], references: [id])
-  items         OrderItem[]
-  totalAmount   Decimal
-  status        OrderStatus   @default(PENDING)
-  paymentStatus PaymentStatus @default(PENDING)
-  payment       Payment?
-  reviews       Review[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @default(now()) @updatedAt
+  id          Int         @id @default(autoincrement())
+  userId      String
+  createdAt   DateTime    @default(now())
+  status      String      @default("PENDING") // PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+  total       Decimal     @db.Decimal(10, 2)
+  updatedAt   DateTime    @default(now()) @updatedAt
+  user        User        @relation(fields: [userId], references: [id])
+  items       OrderItem[]
+  payment     Payment?
+
+  @@index([userId])
 }
 
 model OrderItem {
   id        Int      @id @default(autoincrement())
   orderId   Int
-  order     Order    @relation(fields: [orderId], references: [id])
   productId Int
-  product   Product  @relation(fields: [productId], references: [id])
   quantity  Int
-  price     Decimal
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
 }
 
-enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int
+  comment   String?  @db.Text
+  userId    String
+  productId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([productId])
 }
 
 model Payment {
-  id        Int           @id @default(autoincrement())
-  orderId   Int          @unique
-  order     Order        @relation(fields: [orderId], references: [id])
-  amount    Decimal
-  status    PaymentStatus @default(PENDING)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @default(now()) @updatedAt
+  id            Int       @id @default(autoincrement())
+  orderId       Int      @unique
+  amount        Decimal  @db.Decimal(10, 2)
+  status        String   @default("PENDING") // PENDING, COMPLETED, FAILED, REFUNDED
+  provider      String?  // e.g., "stripe", "paypal"
+  transactionId String?  // Payment provider's transaction ID
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+  order         Order    @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+}
+
+model PendingRequest {
+  id          Int           @id @default(autoincrement())
+  email       String
+  accountType Role          @default(SELLER)
+  ReqStatus   PaymentStatus @default(PENDING)
+  contact     String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now()) @updatedAt
+}
+
+enum Role {
+  USER
+  SELLER
+  ADMIN
 }
 
 enum PaymentStatus {
@@ -113,27 +159,4 @@ enum PaymentStatus {
   COMPLETED
   FAILED
   REFUNDED
-}
-
-model Review {
-  id          Int       @id @default(autoincrement())
-  text        String
-  rating      Int
-  productId   Int
-  product     Product   @relation(fields: [productId], references: [id])
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  orderId     Int?
-  order       Order?    @relation(fields: [orderId], references: [id])
-  createdAt   DateTime  @default(now())
-}
-
-model PendingRequest {
-  id          Int           @id @default(autoincrement())
-  email       String 
-  accountType Role          @default(SELLER)
-  ReqStatus   PaymentStatus @default(PENDING) 
-  contact     String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @default(now()) @updatedAt
 }

@@ -12,10 +12,21 @@ import {
   FaBoxOpen,
   FaListUl,
   FaInfoCircle,
-  FaHeart
+  FaHeart,
+  FaStore
 } from "react-icons/fa";
 import useCartStore from "@/store/cartStore";
 import useUserStore from "@/store/userStore";
+import { useSession } from "next-auth/react";
+
+const Logo = () => (
+  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 bg-white rounded-full p-1">
+    <path d="M8 12L20 6L32 12L20 18L8 12Z" fill="#65a30d" />
+    <path d="M8 12V28L20 34V18L8 12Z" fill="#4d7c0f" />
+    <path d="M20 18V34L32 28V12L20 18Z" fill="#84cc16" />
+    <path d="M34 16L36 15M34 20L37 19M34 24L36 23" stroke="#bef264" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -29,6 +40,10 @@ const Navbar = () => {
   const { favorites } = useUserStore();
   const favoritesCount = favorites.length;
 
+  // Get session data
+  const { data: session } = useSession();
+  const isSeller = session?.user?.role === 'SELLER';
+
   return (
     <nav className="sticky top-0 z-50">
       <div className="bg-gradient-to-r from-lime-700 to-lime-600 shadow-lg">
@@ -36,14 +51,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/logo.svg"
-                alt="QuickShip Logo"
-                width={40}
-                height={40}
-                className="w-10 h-10 bg-white rounded-full p-1"
-                priority
-              />
+              <Logo />
               <span className="text-xl font-bold text-white">QuickShip</span>
             </Link>
 
@@ -71,12 +79,21 @@ const Navbar = () => {
                 <span>Categories</span>
               </Link>
               <Link
-                href="/deals"
+                href="/about"
                 className="text-white hover:text-lime-200 transition-colors flex items-center gap-1"
               >
                 <FaInfoCircle className="text-lime-200" />
                 <span>About</span>
               </Link>
+              {isSeller && (
+                <Link
+                  href="/v1/seller/dashboard"
+                  className="text-white hover:text-lime-200 transition-colors flex items-center gap-1"
+                >
+                  <FaStore className="text-lime-200" />
+                  <span>Seller Dashboard</span>
+                </Link>
+              )}
             </div>
 
             {/* Search Bar */}
@@ -202,13 +219,23 @@ const Navbar = () => {
             <span>Categories</span>
           </Link>
           <Link
-            href="/deals"
+            href="/about"
             className="px-4 py-3 hover:bg-lime-50 flex items-center gap-2"
             onClick={() => setIsMenuOpen(false)}
           >
             <FaInfoCircle className="text-lime-600" />
             <span>About</span>
           </Link>
+          {isSeller && (
+            <Link
+              href="v1/seller/dashboard"
+              className="px-4 py-3 hover:bg-lime-50 flex items-center gap-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <FaStore className="text-lime-600" />
+              <span>Seller Dashboard</span>
+            </Link>
+          )}
           <Link
             href="/wishlist"
             className="px-4 py-3 hover:bg-lime-50 flex items-center gap-2"

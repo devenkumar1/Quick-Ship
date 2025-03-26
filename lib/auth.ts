@@ -3,11 +3,30 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import  {PrismaClient}   from '@prisma/client'
+import { PrismaClient } from '@prisma/client';
+import { User, Role } from "@prisma/client";
 
-const client= new PrismaClient();
+const client = new PrismaClient();
 
-export const authOptions = {
+// Extend the built-in session types
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      email: string;
+      name?: string;
+      role?: Role;
+    }
+  }
+  interface User {
+    id: string;
+    email: string;
+    name?: string;
+    role?: Role;
+  }
+}
+
+export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -26,26 +45,26 @@ export const authOptions = {
         }
 
         try {
-         const user= await client.user.findFirst(
+         const user = await client.user.findFirst(
             {
-            where:{email:credentials.email},
-            select:{id:true,name:true,email:true,role:true,password:true}
+            where: { email: credentials.email },
+            select: { id: true, name: true, email: true, role: true, password: true }
             }
-            )
+          );
 
           if (!user) {
             throw new Error("No user found with this email");
           }
-            if(!user.password){
-                throw new Error ("user doesn't have any password");
-            }
+          if (!user.password) {
+            throw new Error("user doesn't have any password");
+          }
           const isValid = await bcrypt.compare(credentials.password.trim(), user.password.trim());
 
           if (!isValid) {
             throw new Error("Invalid password");
           }
 
-          return { id: user.id.toString(), email: user.email };
+          return { id: user.id.toString(), email: user.email, name: user.name, role: user.role };
         } catch (error) {
           console.error("Auth error:", error);
           throw error;
@@ -55,44 +74,50 @@ export const authOptions = {
   ],
   
   callbacks: {
-    async jwt({ token, user }:any) {
+    async jwt({ token, user }) {
       if (user) {
-        token.id = user.id; 
+        token.id = user.id;
         token.email = user.email;
+        token.role = user.role;
       }
       return token;
     },
 
-    async session({ session, token }:any) {
+    async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id;
-        session.user.email = token.email;
+        session.user.id = token.id as string;
+        session.user.email = token.email as string;
+        session.user.role = token.role as Role;
       }
       return session;
     },
 
-    async signIn({ user, account, profile }:any) {
-        //google O-auth
-      if (account.provider === "google") {
+    async signIn({ user, account, profile }) {
+      // google O-auth
+      if (account?.provider === "google" && user.email) {
         try {
-          
-          let existingUser= await client.user.findFirst({where:{email:user.email}});
+          let existingUser = await client.user.findFirst({ 
+            where: { 
+              email: user.email 
+            }
+          });
 
           if (!existingUser) {
-
             // If user doesn't exist, create a new one
-            const newUser= await client.user.create({
-                data:{
-                    email: user.email,
-                    name: user.name,
-                    provider: account.provider,
-                    providerId: profile.id
-                }
-            })
-            user.id = newUser.id.toString(); 
+            const newUser = await client.user.create({
+              data: {
+                email: user.email,
+                name: user.name || '',
+                provider: account.provider,
+                providerId: account.providerAccountId,
+                role: 'USER' // Default role for new users
+              }
+            });
+            user.role = newUser.role;
+            return true;
           }
-          user.id = existingUser?.id.toString();
-          return true; // User creation or check successful, proceed with sign-in
+          user.role = existingUser.role;
+          return true; // User exists, proceed with sign-in
         } catch (error) {
           console.error("Error saving user:", error);
           return false; // Prevent sign-in if an error occurs
@@ -109,7 +134,7 @@ export const authOptions = {
   },
   
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   

@@ -1,5 +1,9 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { PrismaClient, Decimal } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
+import prisma from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { headers } from 'next/headers';
 
 // Enable Next.js Route Segment Config for caching
 export const dynamic = 'force-dynamic';
@@ -8,8 +12,6 @@ export const revalidate = 300; // Revalidate every 5 minutes
 // Get all products
 export async function GET(req: NextRequest) {
   try {
-    const prisma = new PrismaClient();
-    
     // Get all products with shop information
     const products = await prisma.product.findMany({
       include: {
@@ -19,8 +21,6 @@ export async function GET(req: NextRequest) {
         createdAt: 'desc'
       }
     });
-    
-    await prisma.$disconnect();
     
     return NextResponse.json(
       { products }, 
@@ -41,18 +41,23 @@ export async function GET(req: NextRequest) {
 // Add a new product
 export async function POST(req: NextRequest) {
   try {
-    const prisma = new PrismaClient();
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const data = await req.json();
-    
     console.log('Received product data:', data);
     
     // Validate required fields
-    if (!data.name || !data.price) {
+    if (!data.name || !data.price || !data.category) {
       return NextResponse.json({ 
         error: 'Missing required fields',
         details: {
           name: !data.name ? 'Name is required' : null,
-          price: !data.price ? 'Price is required' : null
+          price: !data.price ? 'Price is required' : null,
+          category: !data.category ? 'Category is required' : null
         }
       }, { status: 400 });
     }
@@ -66,10 +71,19 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // Get the first shop (temporary solution)
-    const shop = await prisma.shop.findFirst();
-    
-    if (!shop) {
+    // Get the user first
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: {
+        seller: {
+          include: {
+            shop: true
+          }
+        }
+      }
+    });
+
+    if (!user?.seller?.shop) {
       return NextResponse.json({ 
         error: 'No shop found. Please create a shop first.',
         details: 'Shop is required to create products'
@@ -80,17 +94,16 @@ export async function POST(req: NextRequest) {
     const product = await prisma.product.create({
       data: {
         name: data.name,
-        description: data.description || null,
+        description: data.description || '',
         price: new Decimal(price),
+        category: data.category.toLowerCase(),
         images: Array.isArray(data.images) ? data.images : [],
-        shopId: shop.id
+        shopId: user.seller.shop.id
       },
       include: {
         shop: true
       }
     });
-    
-    await prisma.$disconnect();
     
     return NextResponse.json({ product }, { status: 201 });
     
@@ -119,9 +132,13 @@ export async function POST(req: NextRequest) {
 // Update a product
 export async function PUT(req: NextRequest) {
   try {
-    const prisma = new PrismaClient();
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const data = await req.json();
-    
     console.log('Received update data:', data);
     
     if (!data.id) {
@@ -137,6 +154,28 @@ export async function PUT(req: NextRequest) {
       }, { status: 400 });
     }
 
+    // Get the user and verify ownership
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: {
+        seller: {
+          include: {
+            shop: {
+              include: {
+                products: {
+                  where: { id: parseInt(data.id) }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!user?.seller?.shop?.products.length) {
+      return NextResponse.json({ error: 'Product not found or unauthorized' }, { status: 404 });
+    }
+
     // Update the product
     const updatedProduct = await prisma.product.update({
       where: {
@@ -144,13 +183,12 @@ export async function PUT(req: NextRequest) {
       },
       data: {
         name: data.name,
-        description: data.description || null,
+        description: data.description || '',
         price: new Decimal(price),
-        images: Array.isArray(data.images) ? data.images : []
+        category: data.category?.toLowerCase() || user.seller.shop.products[0].category,
+        images: Array.isArray(data.images) ? data.images : user.seller.shop.products[0].images
       }
     });
-    
-    await prisma.$disconnect();
     
     return NextResponse.json({ product: updatedProduct }, { status: 200 });
     
@@ -179,12 +217,39 @@ export async function PUT(req: NextRequest) {
 // Delete a product
 export async function DELETE(req: NextRequest) {
   try {
-    const prisma = new PrismaClient();
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const productId = searchParams.get('id');
 
     if (!productId) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
+    }
+
+    // Get the user and verify ownership
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: {
+        seller: {
+          include: {
+            shop: {
+              include: {
+                products: {
+                  where: { id: parseInt(productId) }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!user?.seller?.shop?.products.length) {
+      return NextResponse.json({ error: 'Product not found or unauthorized' }, { status: 404 });
     }
 
     // Delete the product
@@ -194,12 +259,18 @@ export async function DELETE(req: NextRequest) {
       }
     });
     
-    await prisma.$disconnect();
-    
     return NextResponse.json({ message: 'Product deleted successfully' }, { status: 200 });
     
-  } catch (error) {
-    console.error('Error deleting product:', error);
-    return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Error deleting product:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta
+    });
+    
+    return NextResponse.json({ 
+      error: 'Failed to delete product',
+      details: error.message
+    }, { status: 500 });
   }
 } 
