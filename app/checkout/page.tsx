@@ -8,10 +8,13 @@ import Link from 'next/link';
 import { FaArrowLeft, FaSpinner, FaShieldAlt, FaCheck, FaLock } from 'react-icons/fa';
 import useCartStore from '@/store/cartStore';
 import toast from 'react-hot-toast';
-
+import axios from 'axios';
+import Script from 'next/script';
+import useUserStore from '@/store/userStore';
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const {user}=useUserStore();
   
   // Get cart state from cart store
   const { 
@@ -42,21 +45,55 @@ export default function CheckoutPage() {
   }, [status, router, items.length]);
 
   // Handle place order
-  const handlePlaceOrder = () => {
-    // Here you would typically:
-    // 1. Submit the order to your backend API
-    // 2. Process payment
-    // 3. On success, clear the cart and redirect to confirmation
+  const handlePlaceOrder = async() => {
+try {
+  const response= await axios.post('/api/createOrder',{
+    amount: orderTotal, 
+    userId:session?.user.id,
+    orderedItems:items
+  });
+  const orderId= response.data.orderId ;
+     console.log(orderId);
+     const paymentData={
+      key:process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID as string,
+      order_id:orderId,
+      handler:async(response:any)=>{
+        //verify-payment
+        const paymentId=response.razorpay_payment_id;
+        const res= axios.post('/api/verifyOrder',{
+          orderCreationId:response.razorpay_order_id,
+          razorpayPaymentId:response.razorpay_payment_id,
+          razorpaySignature:response.razorpay_signature,
+          prefill: {
+            name: user.name,
+            email: user?.email || '',
+            contact: user?.phone || ''
+          },
+          theme: {
+            color: '#F37254'
+          },
+        })
+        const data=(await res).data;
+        console.log(data);
+        if(data.isOk){
+         console.log('hogaya payment');
+         clearCart();          
+          toast.success('payment successful');
+        }
+        else{
+          console.error('payment failed');
+        }
+      }
+
+    }
+    const payment= new (window as any).Razorpay(paymentData);
+    payment.open()
     
-    // For now, we'll just simulate the process
-    toast.loading('Processing your order...');
-    
-    setTimeout(() => {
-      toast.dismiss();
-      toast.success('Order placed successfully!');
-      clearCart();
-      router.push('/profile?tab=orders');
-    }, 2000);
+} catch (error) {
+  toast.error('Failed to create order');
+  console.log("error in creating order",error);
+}
+
   };
 
   // Show loading state while checking authentication
@@ -72,6 +109,7 @@ export default function CheckoutPage() {
   if (status === 'authenticated') {
     return (
       <div className="container mx-auto px-4 py-8">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" onLoad={() => console.log('Razorpay script loaded')} />
         <h1 className="text-2xl md:text-3xl font-bold mb-6">Checkout</h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

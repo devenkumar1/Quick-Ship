@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
@@ -59,3 +59,12 @@ export async function POST(req: Request) {
     );
   }
 } 
+
+
+export async function GET(){
+  const allapplication= await prisma.sellerApplication.findMany();
+if(!allapplication){
+  return NextResponse.json({message:"no applications found"},{status:400});
+}
+return NextResponse.json({message:"successfully fetched applications",applications:allapplication},{status:200});
+}

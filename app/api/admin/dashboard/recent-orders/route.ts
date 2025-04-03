@@ -32,6 +32,10 @@ export async function GET(req: NextRequest) {
       }
     });
     
+    if(!recentOrders){
+      console.log("no orders found");
+      return NextResponse.json({message:"no product found"},{status:400});
+    }
     // Format the orders for the response
     const formattedOrders = recentOrders.map(order => ({
       id: order.id,

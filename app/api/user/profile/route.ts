@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
       id: order.id,
       date: order.createdAt,
       status: order.status,
-      totalAmount: order.totalAmount,
+      // totalAmount: order.totalAmount,
       items: order.items.map(item => ({
         id: item.id,
         productId: item.productId,
