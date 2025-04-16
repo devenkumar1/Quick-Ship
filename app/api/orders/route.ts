@@ -7,18 +7,17 @@ import { PrismaClient } from '@prisma/client'
 const client= new PrismaClient;
 
 
-
-
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
+    const reqBody= await req.json();
+
+  const {userId} =reqBody;
+   if(!userId) return NextResponse.json({message:"no user id provided "},{status:401})
+  
     const orders = await client.order.findMany({
       where: {
-        userId: session.user.id
+        userId: userId
       },
       include: {
         items: {

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { ShoppingBag, Package, Truck, CheckCircle, XCircle } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import axios from 'axios'
 
 import useUserStore from '@/store/userStore'
 interface Order {
@@ -31,9 +32,9 @@ function MyOrders() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch('/api/orders')
-        if (!response.ok) throw new Error('Failed to fetch orders')
-        const data = await response.json()
+        const response = await axios.post('/api/orders',{userId:user.id});
+        if (response.status!=200) throw new Error('Failed to fetch orders')
+        const data = await response.data;
         setOrders(data.orders)
       } catch (error) {
         console.error('Error fetching orders:', error)
@@ -147,7 +148,7 @@ function MyOrders() {
 
                   <div className="mt-4 flex justify-end">
                     <p className="text-lg font-medium text-gray-900">
-                      Total: ${order.total.toFixed(2)}
+                      Total: ₹{order.total}
                     </p>
                   </div>
                 </div>
