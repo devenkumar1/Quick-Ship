@@ -1,105 +1,136 @@
-import { NextResponse, NextRequest } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import prisma from '@/lib/prisma'
 
 export async function GET(req: NextRequest) {
   try {
-    const prisma = new PrismaClient();
-    
-    // Get all orders with related data
-    const orders = await prisma.order.findMany({
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get the seller's shop
+    const seller = await prisma.seller.findUnique({
+      where: {
+        userId: session.user.id
+      },
       include: {
+        shop: true
+      }
+    })
+
+    if (!seller?.shop) {
+      return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
+    }
+
+    // Get all orders that contain products from this shop
+    const orders = await prisma.order.findMany({
+      where: {
+        items: {
+          some: {
+            product: {
+              shopId: seller.shop.id
+            }
+          }
+        }
+      },
+      include: {
+        items: {
+          where: {
+            product: {
+              shopId: seller.shop.id
+            }
+          },
+          include: {
+            product: {
+              select: {
+                name: true,
+                price: true,
+                images: true
+              }
+            }
+          }
+        },
         user: {
           select: {
             name: true,
-            email: true
+            email: true,
+            phoneNumber: true
           }
-        },
-        items: {
-          include: {
-            product: true
-          }
-        },
-        payment: true
+        }
       },
       orderBy: {
         createdAt: 'desc'
       }
-    });
+    })
 
-    // Format orders for response
-    const formattedOrders = orders.map(order => ({
-      id: order.id,
-      customerName: order.user.name,
-      customerEmail: order.user.email,
-      products: order.items.map(item => ({
-        name: item.product.name,
-        quantity: item.quantity,
-        price: item.price
-      })),
-      totalAmount: order.totalAmount,
-      status: order.status,
-      paymentStatus: order.payment?.status || 'PENDING',
-      createdAt: order.createdAt
-    }));
-    
-    await prisma.$disconnect();
-    
-    return NextResponse.json({ orders: formattedOrders }, { status: 200 });
-    
+    return NextResponse.json({ orders }, { status: 200 })
   } catch (error) {
-    console.error('Error fetching orders:', error);
-    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
+    console.error('Error fetching seller orders:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch orders' },
+      { status: 500 }
+    )
   }
 }
 
-// Update order status
-export async function PUT(req: NextRequest) {
+export async function PATCH(req: NextRequest) {
   try {
-    const prisma = new PrismaClient();
-    const data = await req.json();
-    
-    if (!data.orderId || !data.status) {
-      return NextResponse.json({ error: 'Order ID and status are required' }, { status: 400 });
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { orderId, status } = await req.json()
+
+    // Verify the seller owns the shop that has products in this order
+    const seller = await prisma.seller.findUnique({
+      where: {
+        userId: session.user.id
+      },
+      include: {
+        shop: true
+      }
+    })
+
+    if (!seller?.shop) {
+      return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
+    }
+
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        items: {
+          some: {
+            product: {
+              shopId: seller.shop.id
+            }
+          }
+        }
+      }
+    })
+
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
 
     // Update the order status
     const updatedOrder = await prisma.order.update({
       where: {
-        id: data.orderId
+        id: orderId
       },
       data: {
-        status: data.status
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true
-          }
-        },
-        product: true,
-        payment: true
+        status
       }
-    });
-    
-    await prisma.$disconnect();
-    
-    return NextResponse.json({
-      order: {
-        id: updatedOrder.id,
-        customerName: updatedOrder.user.name,
-        customerEmail: updatedOrder.user.email,
-        productName: updatedOrder.product.name,
-        quantity: updatedOrder.quantity,
-        amount: updatedOrder.payment?.amount || (updatedOrder.quantity * Number(updatedOrder.product.price)),
-        status: updatedOrder.status,
-        paymentStatus: updatedOrder.payment?.status || 'PENDING',
-        createdAt: updatedOrder.createdAt
-      }
-    }, { status: 200 });
-    
+    })
+
+    return NextResponse.json({ order: updatedOrder }, { status: 200 })
   } catch (error) {
-    console.error('Error updating order status:', error);
-    return NextResponse.json({ error: 'Failed to update order status' }, { status: 500 });
+    console.error('Error updating order status:', error)
+    return NextResponse.json(
+      { error: 'Failed to update order status' },
+      { status: 500 }
+    )
   }
 } 

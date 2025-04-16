@@ -217,7 +217,7 @@ export default function CartPage() {
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">Your cart is empty</h2>
           <p className="text-gray-600 mb-8">Looks like you haven't added any products to your cart yet.</p>
           <Link 
-            href="/products" 
+            href="/Products" 
             className="px-6 py-3 bg-lime-600 text-white rounded-md hover:bg-lime-700 transition-colors flex items-center"
           >
             <FaShoppingBag className="mr-2" />

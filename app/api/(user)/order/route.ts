@@ -32,7 +32,9 @@ return NextResponse.json({message:"order created successfully",order:newOrder},{
         
     } catch (error) {
         console.log("error in order route",error);
-        return NextResponse.json({message:"something went wrong in creating order",error:error},{status:500});
+        return NextResponse
+         .json({message:"something went wrong in creating order",error:error},
+        {status:500});
     }
 
 }

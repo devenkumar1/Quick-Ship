@@ -11,10 +11,12 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import Script from 'next/script';
 import useUserStore from '@/store/userStore';
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const {user}=useUserStore();
+
   
   // Get cart state from cart store
   const { 
@@ -40,60 +42,77 @@ export default function CheckoutPage() {
     // Also redirect if cart is empty
     if (items.length === 0) {
       toast.error('Your cart is empty');
-      router.push('/cart');
+      // router.push('/cart');
     }
   }, [status, router, items.length]);
 
   // Handle place order
   const handlePlaceOrder = async() => {
-try {
-  const response= await axios.post('/api/createOrder',{
-    amount: orderTotal, 
-    userId:session?.user.id,
-    orderedItems:items
-  });
-  const orderId= response.data.orderId ;
-     console.log(orderId);
-     const paymentData={
-      key:process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID as string,
-      order_id:orderId,
-      handler:async(response:any)=>{
-        //verify-payment
-        const paymentId=response.razorpay_payment_id;
-        const res= axios.post('/api/verifyOrder',{
-          orderCreationId:response.razorpay_order_id,
-          razorpayPaymentId:response.razorpay_payment_id,
-          razorpaySignature:response.razorpay_signature,
-          prefill: {
-            name: user.name,
-            email: user?.email || '',
-            contact: user?.phone || ''
-          },
-          theme: {
-            color: '#F37254'
-          },
-        })
-        const data=(await res).data;
-        console.log(data);
-        if(data.isOk){
-         console.log('hogaya payment');
-         clearCart();          
-          toast.success('payment successful');
-        }
-        else{
-          console.error('payment failed');
-        }
-      }
-
-    }
-    const payment= new (window as any).Razorpay(paymentData);
-    payment.open()
+    try {
+      const response = await axios.post('/api/createOrder', {
+        amount: orderTotal, 
+        userId: session?.user.id,
+        orderedItems: items.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price
+        }))
+      });
+      const orderId = response.data.orderId;
+      console.log(orderId);
+      
+      const paymentData = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID as string,
+        order_id: orderId,
+        handler: async(response: any) => {
+          try {
+            const res = await axios.post('/api/verifyOrder', {
+              orderCreationId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+              orderedItems: items.map(item => ({
+                productId: item.productId,
+                quantity: item.quantity,
+                price: item.price
+              })),
+              userId: user?.id,
+              amount: orderTotal,
+              prefill: {
+                name: user.name,
+                email: user?.email || '',
+                contact: user?.phone || ''
+              },
+              theme: {
+                color: '#F37254'
+              }
+            });
     
-} catch (error) {
-  toast.error('Failed to create order');
-  console.log("error in creating order",error);
-}
-
+            const data = res.data;
+            console.log(data);
+            
+            if(data.isOk===true) {
+              console.log('Payment successful and order created');
+              toast.success('Payment successful');
+              router.push('/my-orders');
+              clearCart();          
+            } else {
+              console.error('Payment failed');
+              toast.error('Payment failed');
+            }
+          } catch (error) {
+            console.error('Error verifying payment:', error);
+            toast.error('Error processing payment');
+          }
+        }
+      };
+      
+      const payment = new (window as any).Razorpay(paymentData);
+      payment.open();
+      
+    } catch (error) {
+      toast.error('Failed to create order');
+      console.log("error in creating order", error);
+    }
   };
 
   // Show loading state while checking authentication
@@ -128,7 +147,7 @@ try {
                   <input 
                     id="fullName"
                     type="text"
-                    defaultValue={session.user?.name || ''}
+                    defaultValue={user?.name || ''}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
                     placeholder="Enter your full name"
                   />
@@ -200,8 +219,8 @@ try {
                     className="text-lime-600 focus:ring-lime-500 h-4 w-4"
                   />
                   <label htmlFor="cashOnDelivery" className="ml-2 flex-grow cursor-pointer">
-                    <span className="font-medium">Cash on Delivery</span>
-                    <p className="text-xs text-gray-500 mt-1">Pay when your order is delivered</p>
+                    <span className="font-medium">Pay with Razorpay</span>
+                    <p className="text-xs text-gray-500 mt-1">choose from various payment methods available</p>
                   </label>
                   <FaCheck className="text-lime-600" />
                 </div>
@@ -216,25 +235,11 @@ try {
                     className="text-lime-600 focus:ring-lime-500 h-4 w-4"
                   />
                   <label htmlFor="creditCard" className="ml-2 flex-grow">
-                    <span className="font-medium">Credit/Debit Card</span>
+                    <span className="font-medium">Cash on Delivery</span>
                     <p className="text-xs text-gray-500 mt-1">Coming soon!</p>
                   </label>
                 </div>
-                
-                <div className="flex items-center p-3 border rounded-md cursor-not-allowed opacity-60">
-                  <input 
-                    type="radio" 
-                    id="upi" 
-                    name="paymentMethod" 
-                    value="upi" 
-                    disabled
-                    className="text-lime-600 focus:ring-lime-500 h-4 w-4"
-                  />
-                  <label htmlFor="upi" className="ml-2 flex-grow">
-                    <span className="font-medium">UPI Payment</span>
-                    <p className="text-xs text-gray-500 mt-1">Coming soon!</p>
-                  </label>
-                </div>
+            
               </div>
             </div>
             
@@ -323,6 +328,6 @@ try {
     );
   }
   
-  // This should not render, but just in case
+  
   return null;
 } 
