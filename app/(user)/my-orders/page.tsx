@@ -139,7 +139,7 @@ function MyOrders() {
                             </p>
                           </div>
                           <p className="text-sm font-medium text-gray-900">
-                            ${(item.product.price * item.quantity).toFixed(2)}
+                          ₹{(item.product.price * item.quantity).toFixed(2)}
                           </p>
                         </div>
                       ))}

@@ -52,7 +52,7 @@ const Navbar = () => {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
               <Logo />
-              <span className="text-xl font-bold text-white">QuickShip</span>
+              <span className="text-xl font-bold text-white mr-1 md:mr-3">QuickShip</span>
             </Link>
 
             {/* Desktop Navigation */}
@@ -79,11 +79,11 @@ const Navbar = () => {
                 <span>Categories</span>
               </Link>
               <Link
-                href="/about"
+                href="/my-orders"
                 className="text-white hover:text-lime-200 transition-colors flex items-center gap-1"
               >
-                <FaInfoCircle className="text-lime-200" />
-                <span>About</span>
+                <FaStore className="text-lime-200" />
+                <span>My Orders</span>
               </Link>
               {isSeller && (
                 <Link

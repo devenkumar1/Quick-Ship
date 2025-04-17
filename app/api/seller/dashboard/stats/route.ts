@@ -21,7 +21,14 @@ export async function GET(req: NextRequest) {
     });
 
     // Calculate total revenue and other stats
-    const totalRevenue = orders.reduce((sum, order) => sum + Number(order.totalAmount), 0);
+    const totalRevenue = orders.reduce((sum, order) => {
+      // Calculate order total from items
+      const orderTotal = order.items.reduce((itemSum, item) => {
+        return itemSum + (Number(item.price) * item.quantity);
+      }, 0);
+      return sum + orderTotal;
+    }, 0);
+
     const totalOrders = orders.length;
     const totalProducts = productsCount;
 
@@ -63,7 +70,7 @@ export async function GET(req: NextRequest) {
           quantity: item.quantity,
           price: item.price
         })),
-        totalAmount: order.totalAmount,
+        totalAmount: order.items.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0),
         status: order.status,
         paymentStatus: order.payment?.status || 'PENDING',
         createdAt: order.createdAt

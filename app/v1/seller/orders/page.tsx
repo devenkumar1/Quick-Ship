@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react';
-import { FaCheck, FaTruck, FaSpinner, FaRupeeSign } from 'react-icons/fa';
+import { FaCheck, FaTruck, FaSpinner, FaRupeeSign, FaCalendarDay } from 'react-icons/fa';
 import axios from 'axios';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import { formatCurrency } from '@/utils/format';
@@ -30,11 +30,20 @@ interface DashboardStats {
   };
 }
 
+interface TodayStats {
+  stats: {
+    todaysEarnings: number;
+    totalOrders: number;
+  };
+  orders: Order[];
+}
+
 export default function SellerOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [todayStats, setTodayStats] = useState<TodayStats | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -43,13 +52,15 @@ export default function SellerOrders() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const [ordersRes, statsRes] = await Promise.all([
+      const [ordersRes, statsRes, todayStatsRes] = await Promise.all([
         axios.get('/api/seller/orders'),
-        axios.get('/api/seller/dashboard/stats')
+        axios.get('/api/seller/dashboard/stats'),
+        axios.get('/api/seller/dashboard/today-stats')
       ]);
       
       setOrders(ordersRes.data.orders);
       setStats(statsRes.data);
+      setTodayStats(todayStatsRes.data);
     } catch (err) {
       setError('Failed to fetch orders');
       console.error('Error fetching orders:', err);
@@ -103,7 +114,7 @@ export default function SellerOrders() {
       <h1 className="text-2xl font-bold mb-6">Orders Management</h1>
 
       {/* Revenue Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center">
             <FaRupeeSign className="text-green-500 text-3xl mr-4" />
@@ -120,6 +131,17 @@ export default function SellerOrders() {
             <div>
               <p className="text-gray-500">Total Orders</p>
               <p className="text-2xl font-bold">{stats ? stats.stats.totalOrders : 0}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <FaCalendarDay className="text-blue-500 text-3xl mr-4" />
+            <div>
+              <p className="text-gray-500">Today's Earnings</p>
+              <p className="text-2xl font-bold">{todayStats ? formatCurrency(todayStats.stats.todaysEarnings) : '₹0.00'}</p>
+              <p className="text-sm text-gray-500">{todayStats ? `${todayStats.stats.totalOrders} orders today` : '0 orders today'}</p>
             </div>
           </div>
         </div>
