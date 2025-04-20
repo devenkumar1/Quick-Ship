@@ -120,9 +120,9 @@ export function SkeletonAvatar({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
 // Product card skeleton
 export function SkeletonProductCard() {
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="w-full bg-white rounded-lg shadow-md overflow-hidden group relative flex flex-col">
       <Skeleton className="w-full h-48" />
-      <div className="p-4">
+      <div className="p-4 flex flex-col flex-grow justify-between">
         <Skeleton className="h-5 w-2/3 mb-2" />
         <Skeleton className="h-4 w-1/2 mb-4" />
         <div className="flex justify-between items-center">
