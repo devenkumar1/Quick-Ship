@@ -40,14 +40,22 @@ interface TodayStats {
 
 export default function SellerOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [todayStats, setTodayStats] = useState<TodayStats | null>(null);
+  const [dateFilter, setDateFilter] = useState<'all' | 'today'>('all');
 
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    if (orders.length > 0) {
+      applyFilters();
+    }
+  }, [orders, dateFilter]);
 
   const fetchOrders = async () => {
     try {
@@ -58,7 +66,9 @@ export default function SellerOrders() {
         axios.get('/api/seller/dashboard/today-stats')
       ]);
       
-      setOrders(ordersRes.data.orders);
+      const receivedOrders = ordersRes.data.orders;
+      setOrders(receivedOrders);
+      setFilteredOrders(receivedOrders);
       setStats(statsRes.data);
       setTodayStats(todayStatsRes.data);
     } catch (err) {
@@ -105,13 +115,49 @@ export default function SellerOrders() {
     });
   };
 
+  const applyFilters = () => {
+    if (dateFilter === 'today') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const filtered = orders.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        return orderDate >= today;
+      });
+      
+      setFilteredOrders(filtered);
+    } else {
+      setFilteredOrders(orders);
+    }
+  };
+  
+  const handleFilterChange = (filter: 'all' | 'today') => {
+    setDateFilter(filter);
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Orders Management</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Orders Management</h1>
+        <div className="flex space-x-2">
+          <button 
+            onClick={() => handleFilterChange('all')} 
+            className={`px-4 py-2 rounded-md ${dateFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`}
+          >
+            All Orders
+          </button>
+          <button 
+            onClick={() => handleFilterChange('today')} 
+            className={`px-4 py-2 rounded-md ${dateFilter === 'today' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`}
+          >
+            Today's Orders
+          </button>
+        </div>
+      </div>
 
       {/* Revenue Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -176,7 +222,7 @@ export default function SellerOrders() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {orders.map((order) => (
+            {filteredOrders.length > 0 ? filteredOrders.map((order) => (
               <tr key={order.id}>
                 <td className="px-6 py-4">
                   <div>
@@ -239,7 +285,13 @@ export default function SellerOrders() {
                   </div>
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td colSpan={5} className="px-6 py-10 text-center text-gray-500">
+                  {dateFilter === 'today' ? 'No orders found for today.' : 'No orders found.'}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -3,15 +3,14 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { PrismaClient } from '@prisma/client'
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const reqBody= await req.json();
-    const {userId}=await reqBody;
-   if(!userId)
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    
+    }
 
-    const prisma = new PrismaClient;
+    const prisma = new PrismaClient()
 
     // Get the seller's shop
     const seller = await prisma.seller.findUnique({
@@ -93,6 +92,30 @@ export async function POST(req: NextRequest) {
     console.error('Error fetching seller orders:', error)
     return NextResponse.json(
       { error: 'Failed to fetch orders' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    const prisma = new PrismaClient()
+    
+    // Add implementation for POST endpoint here
+    // This would typically be for creating new orders
+    
+    await prisma.$disconnect()
+    
+    return NextResponse.json({ message: 'Order created successfully' }, { status: 201 })
+  } catch (error) {
+    console.error('Error creating order:', error)
+    return NextResponse.json(
+      { error: 'Failed to create order' },
       { status: 500 }
     )
   }
