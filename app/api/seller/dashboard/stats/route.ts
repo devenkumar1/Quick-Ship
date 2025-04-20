@@ -1,21 +1,39 @@
 import { NextResponse, NextRequest } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 import { PrismaClient } from '@prisma/client';
 
 export async function GET(req: NextRequest) {
   try {
-    const prisma = new PrismaClient();
-    
-    // Get count of products
-    const productsCount = await prisma.product.count();
+    // Authenticate and get current user
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const userId = session.user.id;
 
-    // Get orders with their items and payments
+    const prisma = new PrismaClient();
+
+    // Get seller and associated shop
+    const seller = await prisma.seller.findUnique({
+      where: { userId },
+      include: { shop: true }
+    });
+    if (!seller?.shop) {
+      await prisma.$disconnect();
+      return NextResponse.json({ error: 'Shop not found' }, { status: 404 });
+    }
+    const shopId = seller.shop.id;
+
+    // Get count of products for this shop
+    const productsCount = await prisma.product.count({ where: { shopId } });
+
+    // Get orders for this shop
     const orders = await prisma.order.findMany({
+      where: { items: { some: { product: { shopId } } } },
       include: {
-        items: {
-          include: {
-            product: true
-          }
-        },
+        user: { select: { name: true, email: true } },
+        items: { include: { product: true } },
         payment: true
       }
     });
@@ -32,30 +50,20 @@ export async function GET(req: NextRequest) {
     const totalOrders = orders.length;
     const totalProducts = productsCount;
 
-    // Get recent orders
+    // Get recent orders for this shop
     const recentOrders = await prisma.order.findMany({
+      where: { items: { some: { product: { shopId } } } },
       take: 5,
-      orderBy: {
-        createdAt: 'desc'
-      },
+      orderBy: { createdAt: 'desc' },
       include: {
-        user: {
-          select: {
-            name: true,
-            email: true
-          }
-        },
-        items: {
-          include: {
-            product: true
-          }
-        },
+        user: { select: { name: true, email: true } },
+        items: { include: { product: true } },
         payment: true
       }
     });
 
     await prisma.$disconnect();
-    
+
     return NextResponse.json({
       stats: {
         totalRevenue,
@@ -76,9 +84,9 @@ export async function GET(req: NextRequest) {
         createdAt: order.createdAt
       }))
     }, { status: 200 });
-    
+
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
     return NextResponse.json({ error: 'Failed to fetch dashboard stats' }, { status: 500 });
   }
-} 
+}

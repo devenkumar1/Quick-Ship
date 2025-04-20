@@ -1,23 +1,36 @@
 import { NextResponse, NextRequest } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 import { PrismaClient } from '@prisma/client';
 
 export async function GET(req: NextRequest) {
   try {
+    // Authenticate
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const prisma = new PrismaClient();
-    
+
     // Get today's start and end time
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Get today's orders with their items and payments
+    // Get seller shop
+    const seller = await prisma.seller.findUnique({ where: { userId: session.user.id }, include: { shop: true } });
+    if (!seller?.shop) {
+      await prisma.$disconnect();
+      return NextResponse.json({ error: 'Shop not found' }, { status: 404 });
+    }
+    const shopId = seller.shop.id;
+
+    // Get today's orders for this shop
     const todaysOrders = await prisma.order.findMany({
       where: {
-        createdAt: {
-          gte: today,
-          lt: tomorrow
-        }
+        createdAt: { gte: today, lt: tomorrow },
+        items: { some: { product: { shopId } } }
       },
       include: {
         items: {

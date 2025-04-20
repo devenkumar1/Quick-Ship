@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { Decimal } from '@prisma/client/runtime/library';
 import prisma from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { headers } from 'next/headers';
 
@@ -12,19 +12,29 @@ export const revalidate = 300; // Revalidate every 5 minutes
 // Get all products
 export async function GET(req: NextRequest) {
   try {
-    // Get all products with shop information
-    const products = await prisma.product.findMany({
-      include: {
-        shop: true
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
+    // Authenticate
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    // Find seller and shop
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { seller: { include: { shop: true } } }
     });
-    
+    if (!user?.seller?.shop) {
+      return NextResponse.json({ error: 'Shop not found' }, { status: 404 });
+    }
+    const shopId = user.seller.shop.id;
+    // Get products for this shop
+    const products = await prisma.product.findMany({
+      where: { shopId },
+      include: { shop: true },
+      orderBy: { createdAt: 'desc' }
+    });
     return NextResponse.json(
-      { products }, 
-      { 
+      { products },
+      {
         status: 200,
         headers: {
           'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60'

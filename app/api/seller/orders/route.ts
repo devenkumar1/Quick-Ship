@@ -1,49 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { PrismaClient } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const prisma = new PrismaClient()
 
-    // Get the seller's shop
+    // Get seller and their shop
     const seller = await prisma.seller.findUnique({
-      where: {
-        userId: session.user.id
-      },
-      include: {
-        shop: true
-      }
+      where: { userId: session.user.id },
+      include: { shop: true }
     })
-
     if (!seller?.shop) {
+      await prisma.$disconnect()
       return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
     }
+    const shopId = seller.shop.id
 
     // Get all orders that contain products from this shop
     const orders = await prisma.order.findMany({
-      where: {
-        items: {
-          some: {
-            product: {
-              shopId: seller.shop.id
-            }
-          }
-        }
-      },
+      where: { items: { some: { product: { shopId } } } },
       include: {
         items: {
-          where: {
-            product: {
-              shopId: seller.shop.id
-            }
-          },
+          where: { product: { shopId } },
           include: {
             product: {
               select: {
@@ -66,7 +51,6 @@ export async function GET(req: NextRequest) {
       orderBy: {
         createdAt: 'desc'
       }
-    
     })
 
     // Format the orders for the response

@@ -50,13 +50,6 @@ export default function V1SellerLayout({
               Orders
             </Link>
             <Link 
-              href="/v1/seller/earnings"
-              className={`flex items-center px-6 py-3.5 text-lime-100 hover:bg-lime-700 hover:text-white transition-colors ${isActive('/v1/seller/earnings')}`}
-            >
-              <FaRupeeSign className="mr-3" />
-              Earnings
-            </Link>
-            <Link 
               href="/v1/seller/analytics"
               className={`flex items-center px-6 py-3.5 text-lime-100 hover:bg-lime-700 hover:text-white transition-colors ${isActive('/v1/seller/analytics')}`}
             >
