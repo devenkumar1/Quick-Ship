@@ -7,7 +7,7 @@ import prisma from '@/lib/prisma';
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.role === 'ADMIN') {
+    if (session?.user?.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.role === 'ADMIN') {
+    if (session?.user?.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -107,9 +107,12 @@ export async function PUT(req: Request) {
         { status: 400 }
       );
     }
-
+    
+    // Convert applicationId to number if it's a string
+    const appId = typeof applicationId === 'string' ? parseInt(applicationId) : applicationId;
+    
     const application = await prisma.sellerApplication.findUnique({
-      where: { id: applicationId },
+      where: { id: appId },
       include: { user: true }
     });
 
@@ -123,7 +126,7 @@ export async function PUT(req: Request) {
     if (status === 'REJECTED') {
       // Delete the application if rejected
       await prisma.sellerApplication.delete({
-        where: { id: applicationId }
+        where: { id: appId }
       });
       
       return NextResponse.json({ message: 'Application rejected and deleted' });
@@ -132,19 +135,35 @@ export async function PUT(req: Request) {
     // Handle approval process
     const updatedApplication = await prisma.$transaction(async (prisma) => {
       const updated = await prisma.sellerApplication.update({
-        where: { id: applicationId },
+        where: { id: appId },
         data: { status }
       });
 
-      const seller = await prisma.seller.create({
-        data: {
+      // Check if seller already exists or create a new one
+      const seller = await prisma.seller.upsert({
+        where: {
+          userId: application.userId
+        },
+        update: {
+          phone: application.phone
+        },
+        create: {
           phone: application.phone,
           userId: application.userId
         }
       });
 
-      await prisma.shop.create({
-        data: {
+      // Use upsert for the shop creation as well to avoid duplicates
+      await prisma.shop.upsert({
+        where: {
+          sellerId: seller.id
+        },
+        update: {
+          name: application.shopName,
+          description: application.description,
+          location: application.location,
+        },
+        create: {
           name: application.shopName,
           description: application.description,
           location: application.location,
@@ -169,4 +188,4 @@ export async function PUT(req: Request) {
       { status: 500 }
     );
   }
-} 
+}

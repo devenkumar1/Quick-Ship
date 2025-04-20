@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import { FaCheck, FaTruck, FaSpinner, FaRupeeSign, FaCalendarDay } from 'react-icons/fa';
 import axios from 'axios';
-import LoadingSpinner from '@/app/components/LoadingSpinner';
 import { formatCurrency } from '@/utils/format';
+import { SkeletonCard, SkeletonTable, ClientOnly } from '@/app/components/skeletons/Skeleton';
 
 interface Product {
   name: string;
@@ -135,12 +135,33 @@ export default function SellerOrders() {
     setDateFilter(filter);
   };
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
+  // Skeleton loader UI for when data is still loading
+  const renderSkeletonUI = () => (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div className="h-8 w-64 bg-gray-200 rounded animate-pulse" />
+        <div className="flex space-x-2">
+          <div className="h-10 w-24 bg-gray-200 rounded animate-pulse" />
+          <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
+        </div>
+      </div>
+
+      {/* Revenue Overview Skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
+      </div>
+
+      {/* Orders Table Skeleton */}
+      <SkeletonTable rows={5} columns={5} />
+    </div>
+  )
 
   return (
-    <div className="p-6">
+    <ClientOnly>
+      {loading ? renderSkeletonUI() : (
+      <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Orders Management</h1>
         <div className="flex space-x-2">
@@ -296,5 +317,7 @@ export default function SellerOrders() {
         </table>
       </div>
     </div>
+      )}
+    </ClientOnly>
   );
 } 

@@ -35,7 +35,7 @@ export default function SellersDashboard() {
     const fetchSellers = async () => {
       setIsLoadingSellers(true);
       try {
-        const response = await axios.get('/api/admin/sellers');
+        const response = await axios.get<{sellers: User[]}>('/api/admin/sellers');
         if (response.data && response.data.sellers) {
           setSellers(response.data.sellers);
         }
@@ -44,7 +44,9 @@ export default function SellersDashboard() {
         console.error('Error fetching sellers:', error);
         
         // Check if the error is due to API not being implemented (404)
-        if (axios.isAxiosError(error) && error.response?.status === 404) {
+        // Using type check to determine if it's an Axios error with response property
+        const axiosError = error as {response?: {status: number}};
+        if (axiosError.response?.status === 404) {
           setApiMissing(true);
           setMessage({ 
             text: 'The required API endpoints are not implemented yet. Using mock data for demonstration.', 
@@ -71,9 +73,31 @@ export default function SellersDashboard() {
     const fetchPendingRequests = async () => {
       setIsLoadingRequests(true);
       try {
-        const response = await axios.get('/api/admin/seller-requests');
-        if (response.data && response.data.requests) {
-          setPendingRequests(response.data.requests);
+        // Use the correct API endpoint for seller applications
+        interface Application {
+          id: string;
+          status: string;
+          phone?: string;
+          user: {
+            email: string;
+          };
+        }
+        
+        const response = await axios.get<{applications: Application[]}>('/api/admin/seller-applications');
+        
+        if (response.data && response.data.applications) {
+          // Map the applications data to the expected PendingRequest format
+          const mappedRequests = response.data.applications
+            .filter(app => app.status === 'PENDING')
+            .map(app => ({
+              id: Number(app.id) || Math.floor(Math.random() * 1000), // Convert string ID to number or generate random ID
+              email: app.user.email,
+              accountType: 'SELLER',
+              ReqStatus: app.status,
+              contact: app.phone ? Number(app.phone.replace(/\D/g, '')) : 0 // Convert phone to number or default to 0
+            }));
+          
+          setPendingRequests(mappedRequests);
         }
       } catch (error) {
         console.error('Error fetching pending requests:', error);
@@ -141,7 +165,7 @@ export default function SellersDashboard() {
       
       // Refresh the sellers list if we changed someone to a seller
       if (userType === 'SELLER') {
-        const response = await axios.get('/api/admin/sellers');
+        const response = await axios.get<{sellers: User[]}>('/api/admin/sellers');
         if (response.data && response.data.sellers) {
           setSellers(response.data.sellers);
         }
@@ -187,14 +211,17 @@ export default function SellersDashboard() {
         return;
       }
       
-      // Make API call to approve the request
-      await axios.post(`/api/admin/seller-requests/${id}/approve`);
+      // Make API call to approve the request using the correct endpoint
+      await axios.put('/api/admin/seller-applications', {
+        applicationId: id, // Send ID as a number, not a string
+        status: 'APPROVED'
+      });
       
       // Remove the request from the list
       setPendingRequests(pendingRequests.filter(request => request.id !== id));
       
       // Refresh the sellers list
-      const response = await axios.get('/api/admin/sellers');
+      const response = await axios.get<{sellers: User[]}>('/api/admin/sellers');
       if (response.data && response.data.sellers) {
         setSellers(response.data.sellers);
       }
@@ -227,8 +254,11 @@ export default function SellersDashboard() {
         return;
       }
       
-      // Make API call to reject the request
-      await axios.post(`/api/admin/seller-requests/${id}/reject`);
+      // Make API call to reject the request using the correct endpoint
+      await axios.put('/api/admin/seller-applications', {
+        applicationId: id, // Send ID as a number, not a string
+        status: 'REJECTED'
+      });
       
       // Remove the request from the list
       setPendingRequests(pendingRequests.filter(request => request.id !== id));
@@ -278,9 +308,7 @@ export default function SellersDashboard() {
           <p>The following API endpoints need to be implemented:</p>
           <ul className="list-disc pl-5 mt-2">
             <li><code>/api/admin/sellers</code> - To fetch list of sellers</li>
-            <li><code>/api/admin/seller-requests</code> - To fetch seller requests</li>
-            <li><code>/api/admin/seller-requests/:id/approve</code> - To approve seller requests</li>
-            <li><code>/api/admin/seller-requests/:id/reject</code> - To reject seller requests</li>
+            <li><code>/api/admin/seller-applications</code> - To fetch and manage seller applications</li>
             <li><code>/api/admin/account-type</code> - To change user roles</li>
           </ul>
           <p className="mt-2">Currently simulating functionality with mock data for demonstration purposes.</p>

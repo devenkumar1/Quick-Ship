@@ -48,15 +48,23 @@ export default function SellerApplicationsPage() {
     }
 
     fetchApplications();
+
+    // Set up a refresh interval to poll for new applications
+    const refreshInterval = setInterval(fetchApplications, 60000); // Refresh every minute
+    
+    return () => clearInterval(refreshInterval);
   }, [session, status, router]);
 
   const fetchApplications = async () => {
     try {
+      setIsLoading(true);
       const response = await fetch('/api/admin/seller-applications');
       if (!response.ok) throw new Error('Failed to fetch applications');
       const data = await response.json();
+      console.log('Fetched applications:', data.applications);
       setApplications(data.applications);
     } catch (error) {
+      console.error('Error fetching applications:', error);
       toast.error('Failed to load applications');
     } finally {
       setIsLoading(false);

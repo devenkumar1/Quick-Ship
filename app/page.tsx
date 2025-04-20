@@ -6,6 +6,7 @@ import { FaChevronRight } from "react-icons/fa";
 import ProductCard from "@/components/ProductCard";
 import useProductStore from "@/store/productStore";
 import Footer from "@/components/Footer";
+import { ClientOnly, SkeletonProductCard } from "@/app/components/skeletons/Skeleton";
 
 export default function Home() {
   const { 
@@ -29,8 +30,17 @@ export default function Home() {
   const stationeryProducts = filterProductsByCategory('Stationery').slice(0, 4);
   const clothingProducts = filterProductsByCategory('Clothing').slice(0, 4);
 
+  // Skeleton loader for products sections
+  const renderProductSkeletons = (count = 4) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {Array(count).fill(0).map((_, index) => (
+        <SkeletonProductCard key={index} />
+      ))}
+    </div>
+  );
+
   return (
-    <>
+    <ClientOnly>
       <main className="min-h-screen bg-gray-50">
         <br />
         
@@ -82,10 +92,8 @@ export default function Home() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {isLoading ? (
-                // Loading skeleton
-                Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className="animate-pulse bg-gray-100 rounded-xl h-64"></div>
-                ))
+                // Use our new skeleton component
+                renderProductSkeletons()
               ) : error ? (
                 <div className="col-span-full text-center py-8">
                   <p className="text-red-500">{error}</p>
@@ -125,7 +133,9 @@ export default function Home() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {!isLoading && foodProducts.map(product => (
+              {isLoading ? (
+                renderProductSkeletons()
+              ) : foodProducts.map(product => (
                 <div key={product.id} className="h-full transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
                   <ProductCard product={product} />
                 </div>
@@ -148,7 +158,9 @@ export default function Home() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {!isLoading && stationeryProducts.map(product => (
+              {isLoading ? (
+                renderProductSkeletons()
+              ) : stationeryProducts.map(product => (
                 <div key={product.id} className="h-full transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
                   <ProductCard product={product} />
                 </div>
@@ -171,7 +183,9 @@ export default function Home() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {!isLoading && clothingProducts.map(product => (
+              {isLoading ? (
+                renderProductSkeletons()
+              ) : clothingProducts.map(product => (
                 <div key={product.id} className="h-full transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
                   <ProductCard product={product} />
                 </div>
@@ -181,6 +195,6 @@ export default function Home() {
         </section>
       </main>
       <Footer />
-    </>
+    </ClientOnly>
   );
 }

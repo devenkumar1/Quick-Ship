@@ -42,24 +42,41 @@ export default function AdminHome() {
       
       try {
         // Fetch statistics data
-        const statsResponse = await axios.get('/api/admin/dashboard/stats');
+        const statsResponse = await axios.get<DashboardStats>('/api/admin/dashboard/stats');
         
         if (statsResponse.data) {
           setStats(statsResponse.data);
         }
         
         // Fetch recent orders
-        const ordersResponse = await axios.get('/api/admin/dashboard/recent-orders');
+        const ordersResponse = await axios.get<{orders: RecentOrder[]}>('/api/admin/dashboard/recent-orders');
         
         if (ordersResponse.data && ordersResponse.data.orders) {
           setRecentOrders(ordersResponse.data.orders);
         }
         
-        // Fetch pending seller requests
-        const requestsResponse = await axios.get('/api/admin/dashboard/seller-requests');
+        // Fetch pending seller requests - get from seller-applications instead of seller-requests
+        const requestsResponse = await axios.get<{applications: Array<{
+          id: string;
+          status: string;
+          createdAt: string;
+          user: {
+            id: string;
+            name: string;
+            email: string;
+          };
+        }>}>('/api/admin/seller-applications');
         
-        if (requestsResponse.data && requestsResponse.data.requests) {
-          setSellerRequests(requestsResponse.data.requests);
+        if (requestsResponse.data && requestsResponse.data.applications) {
+          // Map applications to sellerRequests format
+          const pendingApplications = requestsResponse.data.applications
+            .filter(app => app.status === 'PENDING')
+            .map(app => ({
+              id: app.id,
+              email: app.user.email,
+              requestedAt: new Date(app.createdAt).toLocaleDateString()
+            }));
+          setSellerRequests(pendingApplications);
         }
         
         setApiMissing(false);
@@ -70,29 +87,46 @@ export default function AdminHome() {
         if (err.response && err.response.status === 404) {
           setApiMissing(true);
           
-          // Set mock data for demonstration
-          setStats({
-            users: 245,
-            sellers: 36,
-            shops: 28,
-            products: 567,
-            orders: 1243,
-            revenue: 4587250
-          });
-          
-          setRecentOrders([
-            { id: '1', customerName: 'Rahul Sharma', amount: 3499, status: 'DELIVERED' },
-            { id: '2', customerName: 'Priya Patel', amount: 1299, status: 'PROCESSING' },
-            { id: '3', customerName: 'Amit Kumar', amount: 8999, status: 'SHIPPED' },
-            { id: '4', customerName: 'Neha Singh', amount: 2499, status: 'PENDING' },
-            { id: '5', customerName: 'Vikram Mehta', amount: 5699, status: 'DELIVERED' }
-          ]);
-          
-          setSellerRequests([
-            { id: '1', email: 'anita.store@gmail.com', requestedAt: '2 days ago' },
-            { id: '2', email: 'tech.gadgets@gmail.com', requestedAt: '5 hours ago' },
-            { id: '3', email: 'fashion.hub@gmail.com', requestedAt: '1 day ago' }
-          ]);
+          // Try fetching only seller applications without setting mock data
+          try {
+            const applicationsResponse = await axios.get<{applications: Array<{
+              id: string;
+              status: string;
+              createdAt: string;
+              user: {
+                id: string;
+                name: string;
+                email: string;
+              };
+            }>}>('/api/admin/seller-applications');
+            
+            if (applicationsResponse.data && applicationsResponse.data.applications) {
+              // Map applications to sellerRequests format
+              const pendingApplications = applicationsResponse.data.applications
+                .filter(app => app.status === 'PENDING')
+                .map(app => ({
+                  id: app.id,
+                  email: app.user.email,
+                  requestedAt: new Date(app.createdAt).toLocaleDateString()
+                }));
+              setSellerRequests(pendingApplications);
+            }
+
+            // For other dashboard data, we still need some defaults
+            setStats({
+              users: 0,
+              sellers: 0,
+              shops: 0,
+              products: 0,
+              orders: 0,
+              revenue: 0
+            } as DashboardStats);
+            
+            setRecentOrders([]);
+          } catch (appError) {
+            console.error('Error fetching seller applications:', appError);
+            setSellerRequests([]);
+          }
         } else {
           setError('Failed to fetch dashboard data. Please try again.');
         }
@@ -356,7 +390,7 @@ export default function AdminHome() {
               </div>
             )}
             <div className="mt-4">
-              <a href="/v1/admin/sellers" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">View all requests →</a>
+              <a href="/v1/admin/seller-applications" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">View all applications →</a>
             </div>
           </div>
         </div>

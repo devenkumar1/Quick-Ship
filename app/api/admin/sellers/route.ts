@@ -14,29 +14,34 @@ export async function GET(req: NextRequest) {
         id: true,
         name: true,
         email: true,
-        phone: true,
+        phoneNumber: true,
         image: true,
         createdAt: true,
-        shop: {
+        seller: {
           select: {
             id: true,
-            name: true
+            shop: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
           }
         }
       }
     });
     
     // Format sellers for the response
-    const formattedSellers = sellers.map(seller => {
+    const formattedSellers = sellers.map(user => {
       return {
-        id: seller.id,
-        name: seller.name,
-        email: seller.email,
-        phone: seller.phone || 'Not provided',
-        image: seller.image || '/images/placeholder-user.jpg',
-        shopId: seller.shop?.id || null,
-        shopName: seller.shop?.name || 'No shop yet',
-        createdAt: seller.createdAt
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phoneNumber || 'Not provided',
+        image: user.image || '/images/placeholder-user.jpg',
+        shopId: user.seller?.shop?.id || null,
+        shopName: user.seller?.shop?.name || 'No shop yet',
+        createdAt: user.createdAt
       };
     });
     
@@ -68,7 +73,13 @@ export async function DELETE(req: NextRequest) {
     // Check if seller exists
     const seller = await prisma.user.findUnique({
       where: { id },
-      include: { shop: true }
+      include: { 
+        seller: {
+          include: {
+            shop: true
+          }
+        }
+      }
     });
     
     if (!seller) {
@@ -77,9 +88,9 @@ export async function DELETE(req: NextRequest) {
     }
     
     // Delete associated shop if it exists
-    if (seller.shop) {
+    if (seller.seller?.shop) {
       await prisma.shop.delete({
-        where: { id: seller.shop.id }
+        where: { id: seller.seller.shop.id }
       });
     }
     

@@ -24,8 +24,13 @@ import {
   Legend,
 } from 'chart.js'
 import { Line, Bar, Doughnut } from 'react-chartjs-2'
-import LoadingSpinner from '@/app/components/LoadingSpinner'
 import { formatCurrency } from '@/utils/format'
+import {
+  SkeletonCard,
+  SkeletonChart,
+  SkeletonTable,
+  ClientOnly
+} from '@/app/components/skeletons/Skeleton'
 
 // Register ChartJS components
 ChartJS.register(
@@ -95,7 +100,7 @@ export default function SellerAnalytics() {
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true)
-      const response = await axios.get('/api/seller/analytics')
+      const response = await axios.get<AnalyticsData>('/api/seller/analytics')
       setAnalyticsData(response.data)
     } catch (err) {
       console.error('Error fetching analytics data:', err)
@@ -171,9 +176,31 @@ export default function SellerAnalytics() {
     }
   }
 
-  if (loading) {
-    return <LoadingSpinner />
-  }
+  // Skeleton loader UI for when data is still loading
+  const renderSkeletonUI = () => (
+    <div className="p-6">
+      <div className="h-8 w-64 bg-gray-200 rounded animate-pulse mb-6" />
+      
+      {/* Key metrics skeletons */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
+      </div>
+
+      {/* Charts skeletons */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <SkeletonChart className="h-80" />
+        <SkeletonChart className="h-80" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <SkeletonTable rows={5} columns={4} className="col-span-2" />
+        <SkeletonChart />
+      </div>
+    </div>
+  )
 
   if (error) {
     return (
@@ -198,7 +225,9 @@ export default function SellerAnalytics() {
   }
 
   return (
-    <div className="p-6">
+    <ClientOnly>
+      {loading ? renderSkeletonUI() : (
+      <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Store Analytics</h1>
 
       {/* Key metrics */}
@@ -430,5 +459,7 @@ export default function SellerAnalytics() {
         </div>
       </div>
     </div>
+      )}
+    </ClientOnly>
   )
 }
