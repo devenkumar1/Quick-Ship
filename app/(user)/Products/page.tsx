@@ -35,10 +35,13 @@ export default function Products() {
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedShop, setSelectedShop] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [priceRange, setPriceRange] = useState<{ min: number; max: number | null }>({ min: 0, max: null });
   const [minRating, setMinRating] = useState<number>(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [shops, setShops] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -49,6 +52,12 @@ export default function Products() {
         if (response.data && response.data.products) {
           setProducts(response.data.products);
           setFilteredProducts(response.data.products);
+          // Populate shop names for filter
+          const shopNames = Array.from(new Set(response.data.products.map(p => p.shop.name)));
+          setShops(shopNames);
+          // Populate categories for filter
+          const categoryNames = Array.from(new Set(response.data.products.map(p => p.category).filter((c): c is string => !!c)));
+          setCategories(categoryNames);
         } else {
           setError('No products found');
         }
@@ -80,6 +89,11 @@ export default function Products() {
       result = result.filter(product => product.category === selectedCategory);
     }
 
+    // Apply shop filter
+    if (selectedShop !== 'all') {
+      result = result.filter(product => product.shop.name === selectedShop);
+    }
+
     // Apply price range filter
     result = result.filter(product => 
       product.price >= priceRange.min && 
@@ -108,7 +122,7 @@ export default function Products() {
     }
 
     setFilteredProducts(result);
-  }, [products, searchQuery, selectedCategory, sortBy, priceRange, minRating]);
+  }, [products, searchQuery, selectedCategory, selectedShop, sortBy, priceRange, minRating]);
 
   // Calculate average rating for a product
   const getAverageRating = (product: Product) => {
@@ -198,6 +212,20 @@ export default function Products() {
               <option value="price-desc">Price: High to Low</option>
               <option value="rating">Highest Rated</option>
             </select>
+            
+            {/* Shop Dropdown */}
+            <select
+              value={selectedShop}
+              onChange={e => setSelectedShop(e.target.value)}
+              className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              aria-label="Filter by shop"
+              title="Filter by shop"
+            >
+              <option value="all">All Shops</option>
+              {shops.map(shop => (
+                <option key={shop} value={shop}>{shop}</option>
+              ))}
+            </select>
           </div>
         </div>
         
@@ -218,10 +246,24 @@ export default function Products() {
                   title="Filter by category"
                 >
                   <option value="all">All Categories</option>
-                  <option value="electronics">Electronics</option>
-                  <option value="clothing">Clothing</option>
-                  <option value="books">Books</option>
-                  <option value="home">Home & Living</option>
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Shop Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Shop</label>
+                <select
+                  value={selectedShop}
+                  onChange={e => setSelectedShop(e.target.value)}
+                  className="block w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="all">All Shops</option>
+                  {shops.map(shop => (
+                    <option key={shop} value={shop}>{shop}</option>
+                  ))}
                 </select>
               </div>
               
