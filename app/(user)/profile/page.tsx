@@ -269,7 +269,7 @@ export default function ProfilePage() {
                             {order.items.length > 1 ? ` + ${order.items.length - 1} more` : ''}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {formatDate(order.date)} • ₹{order.totalAmount.toFixed(2)}
+                            {formatDate(order.date)} • ₹{order.totalAmount}
                           </p>
                         </div>
                       </div>
