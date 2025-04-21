@@ -3,10 +3,10 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { User, Role } from "@prisma/client";
 
-const client = new PrismaClient();
+const client = prisma;
 
 // Extend the built-in session types
 declare module "next-auth" {
