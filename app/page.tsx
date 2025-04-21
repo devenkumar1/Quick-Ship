@@ -14,7 +14,7 @@ export default function Home() {
   const { products, isLoading, error, fetchProducts, filterProductsByCategory } = useProductStore();
   // Hero images for carousel
   const heroImages = [
-    'https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    'https://images.pexels.com/photos/6214155/pexels-photo-6214155.jpeg',
     'https://images.pexels.com/photos/262918/pexels-photo-262918.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     'https://images.pexels.com/photos/70497/pexels-photo-70497.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
   ];
@@ -48,34 +48,43 @@ export default function Home() {
         <br />
         
         {/* Hero Carousel */}
-        <section className="relative h-[80vh]">
-          <Carousel autoPlay infiniteLoop showArrows showThumbs={false} interval={5000} className="h-full">
-            {heroImages.map((src, idx) => (
-              <div key={idx} className="relative h-full">
-                <Image src={src} alt={`slide-${idx}`} fill className="object-cover" />
-              </div>
-            ))}
-          </Carousel>
-          <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center text-white max-w-3xl px-4">
-              <h1 className="text-5xl md:text-6xl font-bold mb-4">
-                Fresh Food Delivered<br />Right To Your Door
-              </h1>
-              <p className="text-xl mb-8">
-                Discover amazing products from trusted sellers around the LPU Campus.
-              </p>
-              <div className="flex flex-wrap gap-4 justify-center">
-                <Link href="/Products" className="bg-lime-700 hover:bg-lime-600 text-white px-8 py-3 rounded-lg font-medium transition-all">
-                  Order Now
-                </Link>
-                <Link href="/categories" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 rounded-lg font-medium transition-all">
-                  Browse Categories
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
+
+        <div className="relative h-[60vh] flex items-center justify-center">
+  {/* Background Layer */}
+  <div
+    className="absolute inset-0 bg-no-repeat bg-center bg-cover"
+    style={{
+      backgroundImage: 'url("https://images.pexels.com/photos/1100059/pexels-photo-1100059.jpeg")',
+      filter: 'brightness(0.5)',
+      zIndex: 0,
+    }}
+  ></div>
+
+  {/* Content Layer */}
+  <div className="relative z-10 text-center text-white max-w-3xl px-4">
+    <h1 className="text-5xl md:text-6xl font-bold mb-4 drop-shadow-[0_0_0.75rem_rgba(255,255,255,0.8)]">
+      Your orders Delivered<br />Right To Your Door
+    </h1>
+    <p className="text-xl mb-8 drop-shadow-[0_0_0.5rem_rgba(255,255,255,0.7)]">
+      Discover amazing products from trusted sellers around the LPU Campus.
+    </p>
+    <div className="flex flex-wrap gap-4 justify-center">
+      <Link
+        href="/Products"
+        className="bg-lime-700 hover:bg-lime-600 text-white px-8 py-3 rounded-lg font-medium transition-all"
+      >
+        Order Now
+      </Link>
+      <Link
+        href="/categories"
+        className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 rounded-lg font-medium transition-all"
+      >
+        Browse Categories
+      </Link>
+    </div>
+  </div>
+</div>
+
 
         {/* Latest Products Section */}
         <section className="py-16 bg-white">
