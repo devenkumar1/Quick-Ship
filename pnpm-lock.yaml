@@ -62,6 +62,9 @@ importers:
       next-auth:
         specifier: ^4.24.11
         version: 4.24.11(next@15.2.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      openid-client:
+        specifier: ^6.4.2
+        version: 6.4.2
       razorpay:
         specifier: ^2.9.6
         version: 2.9.6
@@ -114,6 +117,9 @@ importers:
       '@types/node':
         specifier: ^20
         version: 20.17.27
+      '@types/openid-client':
+        specifier: ^3.7.0
+        version: 3.7.0
       '@types/react':
         specifier: ^19
         version: 19.0.12
@@ -930,6 +936,10 @@ packages:
 
   '@types/node@20.17.27':
     resolution: {integrity: sha512-U58sbKhDrthHlxHRJw7ZLiLDZGmAUOZUbpw0S6nL27sYUdhvgBLCRu/keSd6qcTsfArd1sRFCCBxzWATGr/0UA==}
+
+  '@types/openid-client@3.7.0':
+    resolution: {integrity: sha512-hW+QbAeUyfUHABwUjUECOcv56Mf5tN29xK3GPN7wy3R3XfIQdkm37XELA4wbe2RNG9GYUpN8l2ytfoW05XmpgQ==}
+    deprecated: This is a stub types definition. openid-client provides its own type definitions, so you do not need this installed.
 
   '@types/react-dom@19.0.4':
     resolution: {integrity: sha512-4fSQ8vWFkg+TGhePfUzVmat3eC14TXYSsiiDSLI0dVLsrm9gZFABjPy/Qu6TKgl1tq1Bu1yDsuQgY3A3DOjCcg==}
@@ -1827,6 +1837,9 @@ packages:
   jose@4.15.9:
     resolution: {integrity: sha512-1vUQX+IdDMVPj4k8kOxgUqlcK518yluMuGZwqlr44FS1ppZB/5GWh4rZG89erpOBOJjU/OBsnCVFfapsRz6nEA==}
 
+  jose@6.0.10:
+    resolution: {integrity: sha512-skIAxZqcMkOrSwjJvplIPYrlXGpxTPnro2/QWTDCxAdWQrSTV5/KqspMWmi5WAx5+ULswASJiZ0a+1B/Lxt9cw==}
+
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -2062,6 +2075,9 @@ packages:
     resolution: {integrity: sha512-ppwTtiJZq0O/ai0z7yfudtBpWIoxM8yE6nHi1X47eFR2EWORqfbu6CnPlNsjeN683eT0qG6H/Pyf9fCcvjnnnQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
+  oauth4webapi@3.5.0:
+    resolution: {integrity: sha512-DF3mLWNuxPkxJkHmWxbSFz4aE5CjWOsm465VBfBdWzmzX4Mg3vF8icxK+iKqfdWrIumBJ2TaoNQWx+SQc2bsPQ==}
+
   oauth@0.9.15:
     resolution: {integrity: sha512-a5ERWK1kh38ExDEfoO6qUHJb32rd7aYmPHuyCu3Fta/cnICvYmgd2uhuKXvPD+PXB+gCEYYEaQdIRAjCOwAKNA==}
 
@@ -2115,6 +2131,9 @@ packages:
 
   openid-client@5.7.1:
     resolution: {integrity: sha512-jDBPgSVfTnkIh71Hg9pRvtJc6wTwqjRkN88+gCFtYWrlP4Yx2Dsrow8uPi3qLr/aeymPF3o2+dS+wOpglK04ew==}
+
+  openid-client@6.4.2:
+    resolution: {integrity: sha512-4zBRTsKNRTyKxV5cFzl+LtamsYx/FsWhejjax+qgMkFNGtLj1gMtng2iSoJqqWUT0FHU3IUhO53aeBePg7Sp/g==}
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -3300,6 +3319,10 @@ snapshots:
     dependencies:
       undici-types: 6.19.8
 
+  '@types/openid-client@3.7.0':
+    dependencies:
+      openid-client: 6.4.2
+
   '@types/react-dom@19.0.4(@types/react@19.0.12)':
     dependencies:
       '@types/react': 19.0.12
@@ -4403,6 +4426,8 @@ snapshots:
 
   jose@4.15.9: {}
 
+  jose@6.0.10: {}
+
   js-tokens@4.0.0: {}
 
   js-yaml@4.1.0:
@@ -4608,6 +4633,8 @@ snapshots:
     dependencies:
       path-key: 4.0.0
 
+  oauth4webapi@3.5.0: {}
+
   oauth@0.9.15: {}
 
   object-assign@4.1.1: {}
@@ -4670,6 +4697,11 @@ snapshots:
       lru-cache: 6.0.0
       object-hash: 2.2.0
       oidc-token-hash: 5.1.0
+
+  openid-client@6.4.2:
+    dependencies:
+      jose: 6.0.10
+      oauth4webapi: 3.5.0
 
   optionator@0.9.4:
     dependencies:

@@ -103,14 +103,13 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!existingUser) {
-            // If user doesn't exist, create a new one
             const newUser = await client.user.create({
               data: {
                 email: user.email,
                 name: user.name || '',
                 provider: account.provider,
                 providerId: account.providerAccountId,
-                role: 'USER' // Default role for new users
+                role: 'USER'
               }
             });
             user.role = newUser.role;
@@ -139,6 +138,7 @@ export const authOptions: NextAuthOptions = {
   },
   
   secret: process.env.NEXTAUTH_SECRET,
+  httpOptions: { timeout: 10000 },
 };
 
 export default authOptions;
